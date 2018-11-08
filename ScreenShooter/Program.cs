@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using ScreenShooter.Actuator;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Extensions.Logging;
 using Nett;
+using ScreenShooter.Helper;
 using ScreenShooter.IO;
 
 namespace ScreenShooter
@@ -25,6 +28,9 @@ namespace ScreenShooter
         private TomlTable _config;
         private readonly List<IActuator> _actuators = new List<IActuator>();
         private readonly List<IConnector> _connectors = new List<IConnector>();
+        private readonly List<Task> _connectorTasks = new List<Task>();
+
+        private bool _hasEnteredCleanUpRoutine = false;
 
         public static int Main(string[] args) => CommandLineApplication.Execute<Program>(args);
 
@@ -34,6 +40,13 @@ namespace ScreenShooter
             Logger.Debug("Entering OnExecute()");
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomainUnhandledException;
+            AppDomain.CurrentDomain.ProcessExit += (sender, e) => { AsyncHelper.RunSync(CleanUp); };
+            Console.CancelKeyPress += (sender, e) => { AsyncHelper.RunSync(CleanUp); };
+
+            var programIdentifier =
+                $"{Assembly.GetExecutingAssembly().GetName().Name} {Assembly.GetExecutingAssembly().GetName().Version}";
+            Logger.Info(programIdentifier);
+            Console.Title = programIdentifier;
 
             if (ConfigPath != null)
             {
@@ -64,6 +77,18 @@ namespace ScreenShooter
                     Environment.Exit(-1);
                 }
 
+                Logger.Debug("Starting connectors");
+                foreach (var connector in _connectors)
+                {
+                    await connector.CreateSession();
+                    _connectorTasks.Add(connector.EventLoop());
+                }
+
+                Logger.Debug("Waiting for connectors to die");
+                await Task.WhenAll(_connectorTasks);
+                await CleanUp();
+
+                Logger.Debug("All connectors have quit");
             } else if (Address != null)
             {
                 // enter one-shot mode
@@ -98,7 +123,7 @@ namespace ScreenShooter
                 {
                     try
                     {
-                        Logger.Info($"Initializing {typeof(TInterfaceType)} {objectType.Key}");
+                        Logger.Info($"Initializing {typeof(TInterfaceType).Name} {objectType.Key}");
                         var instance = (TInterfaceType) objectConfig.Get(t);
                         outList.Add(instance);
                     }
@@ -109,6 +134,23 @@ namespace ScreenShooter
                     
                 }
             }
+        }
+
+        private async Task CleanUp()
+        {
+            if (_hasEnteredCleanUpRoutine)
+            {
+                Logger.Warn("CleanUp() already executed, ignoring request");
+                return;
+            }
+            Logger.Debug("Enter CleanUp()");
+            _hasEnteredCleanUpRoutine = true;
+            foreach (var connector in _connectors)
+            {
+                await connector.DestroySession();
+            }
+            await Task.WhenAll(_connectorTasks);
+            Logger.Debug("Exiting CleanUp()");
         }
 
         /// <summary>
