@@ -91,7 +91,7 @@ namespace ScreenShooter.Actuator
             catch (NullReferenceException)
             {
                 // body cannot be downloaded
-                Logger.Error("Body is missing, possibility a network issue");
+                Logger.Error("Body is missing, either your URL contains a redirection or there is a network issue");
                 return new ExecutionResult()
                 {
                     Identifier = sessionId,

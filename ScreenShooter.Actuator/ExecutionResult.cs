@@ -21,6 +21,7 @@ namespace ScreenShooter.Actuator
             sb.AppendFormat("Page Title = {0}\n", Title);
             sb.AppendFormat("Actuator Status = {0}\n", StatusText);
             sb.AppendLine("Attachments:");
+            if (Attachments != null)
             foreach (var attachment in Attachments) sb.AppendFormat("\t{0}\n", attachment);
 
             sb.AppendFormat("Is Download Finished = {0}", HasPotentialUnfinishedDownloads);
