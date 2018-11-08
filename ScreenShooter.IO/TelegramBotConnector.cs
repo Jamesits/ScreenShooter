@@ -119,6 +119,9 @@ namespace ScreenShooter.IO
 
             Logger.Debug($"Received message from @{message.From.Username}: {message.Text}");
             // TODO: check if the text is a URL
+
+            await _bot.SendTextMessageAsync(message.Chat, "Added to queue, please wait",
+                replyToMessageId: message.MessageId);
             NewRequest?.Invoke(this, new TelegramMessageEventArgs
             {
                 OriginMessage = message,
