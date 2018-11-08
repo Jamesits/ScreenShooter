@@ -2,13 +2,9 @@
 
 namespace ScreenShooter.IO
 {
-    interface IRequestConnector
+    interface IConnector
     {
         event EventHandler NewRequest;
     }
 
-    interface IResponseConnector
-    {
-
-    }
 }

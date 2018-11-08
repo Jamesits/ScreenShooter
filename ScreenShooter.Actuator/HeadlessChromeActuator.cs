@@ -83,23 +83,26 @@ namespace ScreenShooter.Actuator
 
         public async Task<ExecutionResult> CapturePage()
         {
+            string title = await _page.GetTitleAsync();
+            string prefix = ScreenShooter.Helper.Path.Escape(title.Substring(0, Math.Min(32, title.Length)) + "-" + _sessionId);
+
             Logger.Debug("Taking screenshot");
-            await _page.ScreenshotAsync($"{_sessionId}.png", new ScreenshotOptions()
+            await _page.ScreenshotAsync($"{prefix}.png", new ScreenshotOptions()
             {
                 FullPage = true
             });
             Logger.Debug("Saving PDF");
-            await _page.PdfAsync($"{_sessionId}.pdf");
+            await _page.PdfAsync($"{prefix}.pdf");
             return new ExecutionResult()
             {
                 Identifier = _sessionId,
                 StatusText = "",
-                Title = await _page.GetTitleAsync(),
+                Title = title,
                 Url = _page.Url,
                 Attachments = new []
                 {
-                    $"{_sessionId}.png",
-                    $"{_sessionId}.pdf",
+                    $"{prefix}.png",
+                    $"{prefix}.pdf",
                 },
                 HasPotentialUnfinishedDownloads = _hasDownloadSucceed,
             };

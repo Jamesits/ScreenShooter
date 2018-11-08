@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScreenShooter.IO", "ScreenS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScreenShooter.Actuator", "ScreenShooter.Actuator\ScreenShooter.Actuator.csproj", "{04FFEEA3-E831-411C-B87E-1154AFF2BD6B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScreenShooter.Helper", "ScreenShooter.Helper\ScreenShooter.Helper.csproj", "{198DF333-AB7B-4ABB-8B62-6164F48A0FE0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{04FFEEA3-E831-411C-B87E-1154AFF2BD6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{04FFEEA3-E831-411C-B87E-1154AFF2BD6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{04FFEEA3-E831-411C-B87E-1154AFF2BD6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{198DF333-AB7B-4ABB-8B62-6164F48A0FE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{198DF333-AB7B-4ABB-8B62-6164F48A0FE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{198DF333-AB7B-4ABB-8B62-6164F48A0FE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{198DF333-AB7B-4ABB-8B62-6164F48A0FE0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

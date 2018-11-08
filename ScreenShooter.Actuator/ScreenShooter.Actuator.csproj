@@ -12,4 +12,8 @@
     <PackageReference Include="PuppeteerSharp" Version="1.9.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ScreenShooter.Helper\ScreenShooter.Helper.csproj" />
+  </ItemGroup>
+
 </Project>
