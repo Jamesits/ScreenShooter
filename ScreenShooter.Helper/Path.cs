@@ -12,7 +12,7 @@ namespace ScreenShooter.Helper
             StringBuilder sb = new StringBuilder();
             foreach (char c in s)
             {
-                if (invalidFileChars.Contains(c) || @"\/".ToCharArray().Contains(c))
+                if (!(invalidFileChars.Contains(c) || @"\/".ToCharArray().Contains(c)))
                 {
                     sb.Append(c);
                 }
