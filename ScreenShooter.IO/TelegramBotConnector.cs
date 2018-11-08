@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using NLog;
 using ScreenShooter.Actuator;
@@ -118,15 +119,38 @@ namespace ScreenShooter.IO
             }
 
             Logger.Debug($"Received message from @{message.From.Username}: {message.Text}");
-            // TODO: check if the text is a URL
-
-            await _bot.SendTextMessageAsync(message.Chat, "Added to queue, please wait",
-                replyToMessageId: message.MessageId);
-            NewRequest?.Invoke(this, new TelegramMessageEventArgs
+            if (message.Text.StartsWith('/'))
             {
-                OriginMessage = message,
-                Url = message.Text
-            });
+                // is a command
+                switch (message.Text.Split(' ').First())
+                {
+                    case "/start":
+                    case "/help":
+                        await _bot.SendTextMessageAsync(message.Chat, 
+                            "Welcome!\nDrop a URL, get a PNG + PDF.\nDemo development bot, service not guaranteed.\nSet up yours at https://github.com/Jamesits/ScreenShooter",
+                            replyToMessageId: message.MessageId);
+                        break;
+                    default:
+                        await _bot.SendTextMessageAsync(message.Chat, "Unknown command. \n\n/help - get help",
+                            replyToMessageId: message.MessageId);
+                        break;
+                }
+            }
+            else
+            {
+                // assume is a URL
+                // TODO: check if the text is a URL
+
+                await _bot.SendTextMessageAsync(message.Chat, "Added to queue, please wait",
+                    replyToMessageId: message.MessageId);
+                NewRequest?.Invoke(this, new TelegramMessageEventArgs
+                {
+                    OriginMessage = message,
+                    Url = message.Text
+                });
+            }
+
+            
         }
 
         private void OnReceiveError(object sender, ReceiveErrorEventArgs receiveErrorEventArgs)
