@@ -3,6 +3,7 @@ using System.Data.SqlTypes;
 using System.Threading.Tasks;
 using NLog;
 using PuppeteerSharp;
+using PuppeteerSharp.Media;
 using ScreenShooter.Helper;
 
 namespace ScreenShooter.Actuator
@@ -111,7 +112,20 @@ namespace ScreenShooter.Actuator
                 FullPage = true
             });
             Logger.Debug("Saving PDF");
-            await page.PdfAsync($"{prefix}.pdf");
+            await page.PdfAsync($"{prefix}.pdf", new PdfOptions()
+            {
+                FooterTemplate = "<url> - Captured by ScreenShooter - <pageNumber>/<totalPages>",
+                DisplayHeaderFooter = true,
+                Format = PaperFormat.A4,
+                MarginOptions = new MarginOptions()
+                {
+                    Bottom = "1in",
+                    Top = "1in",
+                    Left = "1in",
+                    Right = "1in",
+                },
+                HeaderTemplate = "<title> - <date>",
+            });
             var ret = new ExecutionResult
             {
                 Identifier = sessionId,
