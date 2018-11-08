@@ -52,6 +52,18 @@ namespace ScreenShooter
                 var connectors = _config.Get<TomlTable>("Connector");
                 CreateObjects(connectors, "ScreenShooter.IO", _connectors);
 
+                if (_connectors.Count == 0)
+                {
+                    Logger.Fatal("No valid connector created, check your config");
+                    Environment.Exit(-1);
+                }
+
+                if (_actuators.Count == 0)
+                {
+                    Logger.Fatal("No valid actuators found, check your config");
+                    Environment.Exit(-1);
+                }
+
             } else if (Address != null)
             {
                 // enter one-shot mode
@@ -92,7 +104,7 @@ namespace ScreenShooter
                     }
                     catch (ArgumentNullException)
                     {
-                        Logger.Error($"Type {objectType.Key} not found");
+                        Logger.Warn($"Type {objectType.Key} not found");
                     }
                     
                 }
