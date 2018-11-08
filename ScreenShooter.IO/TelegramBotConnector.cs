@@ -70,7 +70,7 @@ namespace ScreenShooter.IO
                         try
                         {
                             var fileName = Path.GetFileName(filePath);
-                            Logger.Debug($"({trial}) Uploading file \"{fileName}\"");
+                            Logger.Debug($"(retry {trial}/{MaxUploadRetries}) Uploading file \"{fileName}\"");
                             var inputOnlineFile = new InputOnlineFile(fs, fileName);
                             await _bot.SendDocumentAsync(ex.OriginMessage.Chat, inputOnlineFile,
                                 replyToMessageId: ex.OriginMessage.MessageId);

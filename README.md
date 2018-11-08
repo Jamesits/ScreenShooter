@@ -2,22 +2,26 @@
 
 [![Build Status](https://dev.azure.com/nekomimiswitch/General/_apis/build/status/ScreenShooter)](https://dev.azure.com/nekomimiswitch/General/_build/latest?definitionId=26)
 
-An automatic screenshot mailer service.
+An automatic screenshot service.
 
 > Some links have died, but they are still alive;<br>
 > Some links are alive, but they have already died.
 
 ## Features
 
+Currently supported:
+
 Screenshot Actuator:
- * Chrome (`HeadlessChromeActuator`)
+ * Chromium (`HeadlessChromeActuator`)
 
 Messenging Connector:
  * Telegram (`TelegramBotConnector`)
 
 ## Usage
 
-`dotnet ScreenShooter.dll --config path/to/your/config.toml`
+Launch: `dotnet ScreenShooter.dll --config path/to/your/config.toml`
+
+Config file example:
 
 ```toml
 [Actuator]
@@ -38,3 +42,11 @@ MaxTitlePrependLength=32
 ApiKey="your-api-key"
 MaxUploadRetries=3
 ```
+
+Note that you can write multiple `[[Connector.x]]` to get multiple different instances of them.
+
+## Donation
+
+If this project is helpful to you, please consider buying me a coffee.
+
+[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/Jamesits) or [PayPal](https://paypal.me/Jamesits)
