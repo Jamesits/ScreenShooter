@@ -153,6 +153,8 @@ namespace ScreenShooter
 
             Logger.Debug("Sending result");
             await s.SendResult(ret, ex);
+
+            Logger.Debug($"Ending session {g}");
         }
 
         private async Task CleanUp()

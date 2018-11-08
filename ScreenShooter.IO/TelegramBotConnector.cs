@@ -56,7 +56,7 @@ namespace ScreenShooter.IO
                 using (var fs = File.OpenRead(filePath))
                 {
                     var fileName = Path.GetFileName(filePath);
-                    Logger.Debug($"Uploading file {fileName}");
+                    Logger.Debug($"Uploading file \"{fileName}\"");
                     var inputOnlineFile = new InputOnlineFile(fs, fileName);
                     await _bot.SendDocumentAsync(ex.OriginMessage.Chat, inputOnlineFile,
                         replyToMessageId: ex.OriginMessage.MessageId);
