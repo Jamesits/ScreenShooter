@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Nett;
 
 namespace ScreenShooter.Actuator
 {
-    interface IActuator
+    public interface IActuator
     {
-        Task CreateSession(string url, Guid sessionId, int windowWidth=1920, int windowHeight=1080);
+        Task CreateSession(string url, Guid sessionId);
         Task<ExecutionResult> CapturePage();
         Task DestroySession();
     }

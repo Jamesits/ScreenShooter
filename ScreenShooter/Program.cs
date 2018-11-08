@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using ScreenShooter.Actuator;
 using McMaster.Extensions.CommandLineUtils;
 using Nett;
+using ScreenShooter.IO;
 
 namespace ScreenShooter
 {
@@ -11,7 +13,7 @@ namespace ScreenShooter
     {
         #region arguments
         // ReSharper disable UnassignedGetOnlyAutoProperty
-        [Option("-c|--config", CommandOptionType.SingleValue, Description = "Config file location")]
+        [Option("-c|--config", CommandOptionType.SingleValue, Description = "_config file location")]
         public string ConfigPath { get; }
 
         [Argument(0)]
@@ -20,7 +22,9 @@ namespace ScreenShooter
         #endregion
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        public TomlTable Config;
+        private TomlTable _config;
+        private readonly List<IActuator> _actuators = new List<IActuator>();
+        private readonly List<IConnector> _connectors = new List<IConnector>();
 
         public static int Main(string[] args) => CommandLineApplication.Execute<Program>(args);
 
@@ -33,13 +37,21 @@ namespace ScreenShooter
 
             if (ConfigPath != null)
             {
-                Config = Toml.ReadFile(ConfigPath);
+                _config = Toml.ReadFile(ConfigPath);
             }
 
             if (ConfigPath != null && Address == null)
             {
-                // TODO: enter daemon mode
                 Logger.Debug("Entering daemon mode");
+
+                Logger.Debug("Enumerating actuators");
+                var actuators = _config.Get<TomlTable>("Actuator");
+                CreateObjects(actuators, "ScreenShooter.Actuator", _actuators);
+
+                Logger.Debug("Enumerating Connectors");
+                var connectors = _config.Get<TomlTable>("Connector");
+                CreateObjects(connectors, "ScreenShooter.IO", _connectors);
+
             } else if (Address != null)
             {
                 // enter one-shot mode
@@ -60,6 +72,31 @@ namespace ScreenShooter
                 Environment.Exit(-1);
             }
             Logger.Debug("Exiting OnExecute()");
+        }
+
+        private static void CreateObjects<TInterfaceType>(TomlTable config, string typeStringPrefix, ICollection<TInterfaceType> outList)
+        {
+            foreach (var objectType in config)
+            {
+                var typeString = $"{typeStringPrefix}.{objectType.Key}";
+                // Type.GetType requires assembly name
+                // Here we assume the actual type and the interface is in the same assembly
+                var t = typeof(TInterfaceType).Assembly.GetType(typeString); 
+                foreach (var objectConfig in objectType.Value.Get<TomlTableArray>().Items)
+                {
+                    try
+                    {
+                        Logger.Info($"Initializing {typeof(TInterfaceType)} {objectType.Key}");
+                        var instance = (TInterfaceType) objectConfig.Get(t);
+                        outList.Add(instance);
+                    }
+                    catch (ArgumentNullException)
+                    {
+                        Logger.Error($"Type {objectType.Key} not found");
+                    }
+                    
+                }
+            }
         }
 
         /// <summary>

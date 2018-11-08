@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Nett;
 using PuppeteerSharp;
 
 namespace ScreenShooter.Actuator
@@ -16,7 +17,14 @@ namespace ScreenShooter.Actuator
 
         private bool _hasDownloadSucceed = true;
 
-        public async Task CreateSession(string url, Guid sessionId, int windowWidth=1920, int windowHeight=1080)
+        public int WindowWidth { get; set; } = 1920;
+        public int WindowHeight { get; set; } = 1080;
+        public int PageDownloadTimeout { get; set; } = 30000;
+        public int PageScrollActionWaitDelay { get; set; } = 2000;
+        public int ExtraDownloadWaitDelay { get; set; } = 10000;
+        public int MaxTitlePrependLength { get; set; } = 32;
+
+        public async Task CreateSession(string url, Guid sessionId)
         {
             Logger.Debug($"Enter CreateSession() for session {sessionId}");
 
@@ -40,15 +48,15 @@ namespace ScreenShooter.Actuator
             _page = await _browser.NewPageAsync();
             await _page.SetViewportAsync(new ViewPortOptions
             {
-                Width = windowWidth,
-                Height = windowHeight
+                Width = WindowWidth,
+                Height = WindowHeight
             });
             Logger.Debug($"Navigate to {url}");
             try
             {
                 await _page.GoToAsync(
                     url,
-                    timeout: 30000,
+                    timeout: PageDownloadTimeout,
                     waitUntil: new[] { WaitUntilNavigation.Networkidle0 }
                 );
             }
@@ -70,13 +78,13 @@ namespace ScreenShooter.Actuator
             while (viewportIncr + viewportHeight < boundingBox.Height)
             {
                 await _page.EvaluateExpressionAsync($"window.scrollBy(0, {viewportHeight})");
-                await _page.WaitForTimeoutAsync(2000);
+                await _page.WaitForTimeoutAsync(PageScrollActionWaitDelay);
                 viewportIncr += viewportHeight;
             }
 
             // scroll up
             await _page.EvaluateExpressionAsync("window.scrollTo(0, 0)");
-            await _page.WaitForTimeoutAsync(10000);
+            await _page.WaitForTimeoutAsync(ExtraDownloadWaitDelay);
 
             Logger.Debug("Exit CreateSession()");
         }
@@ -84,7 +92,7 @@ namespace ScreenShooter.Actuator
         public async Task<ExecutionResult> CapturePage()
         {
             string title = await _page.GetTitleAsync();
-            string prefix = ScreenShooter.Helper.Path.Escape(title.Substring(0, Math.Min(32, title.Length)) + "-" + _sessionId);
+            string prefix = ScreenShooter.Helper.Path.Escape(title.Substring(0, Math.Min(MaxTitlePrependLength, title.Length)) + "-" + _sessionId);
 
             Logger.Debug("Taking screenshot");
             await _page.ScreenshotAsync($"{prefix}.png", new ScreenshotOptions()
