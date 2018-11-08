@@ -2,37 +2,32 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
-using ScreenShooter.Actuator;
 using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Extensions.Logging;
 using Nett;
+using NLog;
+using ScreenShooter.Actuator;
 using ScreenShooter.Helper;
 using ScreenShooter.IO;
 
 namespace ScreenShooter
 {
-    [Command(Name = "ScreenShooter.exe", Description = "Simple web page screenshot utility")]
-    class Program
+    [Command(Name = "ScreenShooter.exe", Description = "Simple web page screen shot utility")]
+    internal class Program
     {
-        #region arguments
-        // ReSharper disable UnassignedGetOnlyAutoProperty
-        [Option("-c|--config", CommandOptionType.SingleValue, Description = "_config file location")]
-        public string ConfigPath { get; }
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        [Argument(0)]
-        public string Address { get; }
-        // ReSharper restore UnassignedGetOnlyAutoProperty
-        #endregion
-
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        private TomlTable _config;
+        private static readonly Random Rnd = new Random();
         private readonly List<IActuator> _actuators = new List<IActuator>();
         private readonly List<IConnector> _connectors = new List<IConnector>();
         private readonly List<Task> _connectorTasks = new List<Task>();
+        private TomlTable _config;
 
-        private bool _hasEnteredCleanUpRoutine = false;
+        private bool _hasEnteredCleanUpRoutine;
 
-        public static int Main(string[] args) => CommandLineApplication.Execute<Program>(args);
+        public static int Main(string[] args)
+        {
+            return CommandLineApplication.Execute<Program>(args);
+        }
 
         // ReSharper disable once UnusedMember.Global
         public async Task OnExecuteAsync()
@@ -48,10 +43,7 @@ namespace ScreenShooter
             Logger.Info(programIdentifier);
             Console.Title = programIdentifier;
 
-            if (ConfigPath != null)
-            {
-                _config = Toml.ReadFile(ConfigPath);
-            }
+            if (ConfigPath != null) _config = Toml.ReadFile(ConfigPath);
 
             if (ConfigPath != null && Address == null)
             {
@@ -82,6 +74,7 @@ namespace ScreenShooter
                 {
                     await connector.CreateSession();
                     _connectorTasks.Add(connector.EventLoop());
+                    connector.NewRequest += Connect;
                 }
 
                 Logger.Debug("Waiting for connectors to die");
@@ -89,38 +82,36 @@ namespace ScreenShooter
                 await CleanUp();
 
                 Logger.Debug("All connectors have quit");
-            } else if (Address != null)
+            }
+            else if (Address != null)
             {
                 // enter one-shot mode
                 Logger.Debug("Entering one-shot mode");
                 var g = Guid.NewGuid();
                 var actuator = new HeadlessChromeActuator();
-                Logger.Debug($"Creating session {g}");
-                await actuator.CreateSession(Address, g);
                 Logger.Debug("Capturing page");
-                var ret = await actuator.CapturePage();
+                var ret = await actuator.CapturePage(Address, g);
                 Logger.Info(ret);
-                Logger.Debug("Destoring session");
-                await actuator.DestroySession();
             }
             else
             {
                 Logger.Fatal("Confused by the provided command line arguments");
                 Environment.Exit(-1);
             }
+
             Logger.Debug("Exiting OnExecute()");
         }
 
-        private static void CreateObjects<TInterfaceType>(TomlTable config, string typeStringPrefix, ICollection<TInterfaceType> outList)
+        private static void CreateObjects<TInterfaceType>(TomlTable config, string typeStringPrefix,
+            ICollection<TInterfaceType> outList)
         {
             foreach (var objectType in config)
             {
                 var typeString = $"{typeStringPrefix}.{objectType.Key}";
                 // Type.GetType requires assembly name
                 // Here we assume the actual type and the interface is in the same assembly
-                var t = typeof(TInterfaceType).Assembly.GetType(typeString); 
+                var t = typeof(TInterfaceType).Assembly.GetType(typeString);
                 foreach (var objectConfig in objectType.Value.Get<TomlTableArray>().Items)
-                {
                     try
                     {
                         Logger.Info($"Initializing {typeof(TInterfaceType).Name} {objectType.Key}");
@@ -131,9 +122,37 @@ namespace ScreenShooter
                     {
                         Logger.Warn($"Type {objectType.Key} not found");
                     }
-                    
-                }
             }
+        }
+
+        private async void Connect(object sender, EventArgs e)
+        {
+            var s = sender as IConnector;
+            if (s == null)
+            {
+                Logger.Warn("sender is not a IConnector, ignoring");
+                return;
+            }
+
+            var ex = e as NewRequestEventArgs;
+            if (ex == null)
+            {
+                Logger.Warn("eventArgs is not a NewRequestEventArgs, ignoring");
+                return;
+            }
+
+            // randomly select a actuator
+            var r = Rnd.Next(_actuators.Count);
+            var a = _actuators[r];
+
+            // execute
+            var g = Guid.NewGuid();
+            Logger.Debug($"Creating session {g}");
+            var ret = await a.CapturePage(ex.Url, g);
+            Logger.Info(ret);
+
+            Logger.Debug("Sending result");
+            await s.SendResult(ret, ex);
         }
 
         private async Task CleanUp()
@@ -143,18 +162,16 @@ namespace ScreenShooter
                 Logger.Warn("CleanUp() already executed, ignoring request");
                 return;
             }
+
             Logger.Debug("Enter CleanUp()");
             _hasEnteredCleanUpRoutine = true;
-            foreach (var connector in _connectors)
-            {
-                await connector.DestroySession();
-            }
+            foreach (var connector in _connectors) await connector.DestroySession();
             await Task.WhenAll(_connectorTasks);
             Logger.Debug("Exiting CleanUp()");
         }
 
         /// <summary>
-        /// The default global exception handler
+        ///     The default global exception handler
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="eventArgs"></param>
@@ -164,5 +181,16 @@ namespace ScreenShooter
             var e = eventArgs.ExceptionObject as Exception;
             Logger.Error($"Something happened. \n\nException:\n{e}\n\nInnerException:{e?.InnerException}");
         }
+
+        #region arguments
+
+        // ReSharper disable UnassignedGetOnlyAutoProperty
+        [Option("-c|--config", CommandOptionType.SingleValue, Description = "_config file location")]
+        public string ConfigPath { get; }
+
+        [Argument(0)] public string Address { get; }
+        // ReSharper restore UnassignedGetOnlyAutoProperty
+
+        #endregion
     }
 }

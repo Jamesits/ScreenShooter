@@ -9,9 +9,12 @@ namespace ScreenShooter.IO
         event EventHandler NewRequest;
         Task CreateSession();
         Task EventLoop();
-        Task SendResult(ExecutionResult result);
+        Task SendResult(ExecutionResult result, NewRequestEventArgs originRequestEventArgs);
         Task DestroySession();
-
     }
 
+    public class NewRequestEventArgs : EventArgs
+    {
+        public string Url { get; set; }
+    }
 }
