@@ -1,11 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ScreenShooter.IO
 {
-    interface IConnector
+    interface IRequestConnector
     {
         event EventHandler NewRequest;
+    }
+
+    interface IResponseConnector
+    {
+
     }
 }

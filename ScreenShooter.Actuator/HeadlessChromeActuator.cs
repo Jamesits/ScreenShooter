@@ -8,13 +8,20 @@ namespace ScreenShooter.Actuator
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
+        private Guid _sessionId;
+
         private BrowserFetcher _browserFetcher;
         private Browser _browser;
         private Page _page;
 
-        public async Task CreateSession(string url, int windowWidth=1920, int windowHeight=1080)
+        private bool _hasDownloadSucceed = true;
+
+        public async Task CreateSession(string url, Guid sessionId, int windowWidth=1920, int windowHeight=1080)
         {
-            Logger.Debug("Enter CreateSession()");
+            Logger.Debug($"Enter CreateSession() for session {sessionId}");
+
+            _sessionId = sessionId;
+
             _browserFetcher = new BrowserFetcher();
             _browserFetcher.DownloadProgressChanged += (sender, e) =>
             {
@@ -49,6 +56,7 @@ namespace ScreenShooter.Actuator
             {
                 // TODO: time exceeded
                 Logger.Warn("Page loading time exceeded.");
+                _hasDownloadSucceed = false;
             }
             
             Logger.Debug("Trying to load lazy-loading elements");
@@ -73,19 +81,28 @@ namespace ScreenShooter.Actuator
             Logger.Debug("Exit CreateSession()");
         }
 
-        public async Task CaptureImage(string fileName)
+        public async Task<ExecutionResult> CapturePage()
         {
-            Logger.Debug($"Take screenshot to {fileName}");
-            await _page.ScreenshotAsync(fileName, new ScreenshotOptions()
+            Logger.Debug("Taking screenshot");
+            await _page.ScreenshotAsync($"{_sessionId}.png", new ScreenshotOptions()
             {
                 FullPage = true
             });
-        }
-
-        public async Task CapturePdf(string fileName)
-        {
-            Logger.Debug($"Save PDF to {fileName}");
-            await _page.PdfAsync(fileName);
+            Logger.Debug("Saving PDF");
+            await _page.PdfAsync($"{_sessionId}.pdf");
+            return new ExecutionResult()
+            {
+                Identifier = _sessionId,
+                StatusText = "",
+                Title = await _page.GetTitleAsync(),
+                Url = _page.Url,
+                Attachments = new []
+                {
+                    $"{_sessionId}.png",
+                    $"{_sessionId}.pdf",
+                },
+                HasPotentialUnfinishedDownloads = _hasDownloadSucceed,
+            };
         }
 
         public async Task DestroySession()

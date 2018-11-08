@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using ScreenShooter.Actuator;
 using McMaster.Extensions.CommandLineUtils;
+using Nett;
 
 namespace ScreenShooter
 {
@@ -19,6 +20,7 @@ namespace ScreenShooter
         #endregion
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        public TomlTable Config;
 
         public static int Main(string[] args) => CommandLineApplication.Execute<Program>(args);
 
@@ -29,22 +31,26 @@ namespace ScreenShooter
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomainUnhandledException;
 
+            if (ConfigPath != null)
+            {
+                Config = Toml.ReadFile(ConfigPath);
+            }
+
             if (ConfigPath != null && Address == null)
             {
                 // TODO: enter daemon mode
                 Logger.Debug("Entering daemon mode");
-            } else if (ConfigPath == null && Address != null)
+            } else if (Address != null)
             {
                 // enter one-shot mode
                 Logger.Debug("Entering one-shot mode");
                 var g = Guid.NewGuid();
                 var actuator = new HeadlessChromeActuator();
-                Logger.Debug("Creating session");
-                await actuator.CreateSession(Address);
-                Logger.Debug($"Saving screenshot to {g}.png");
-                await actuator.CaptureImage($"{g}.png");
-                Logger.Debug($"Saving PDF to {g}.pdf");
-                await actuator.CapturePdf($"{g}.pdf");
+                Logger.Debug($"Creating session {g}");
+                await actuator.CreateSession(Address, g);
+                Logger.Debug("Capturing page");
+                var ret = await actuator.CapturePage();
+                Logger.Info(ret);
                 Logger.Debug("Destoring session");
                 await actuator.DestroySession();
             }
