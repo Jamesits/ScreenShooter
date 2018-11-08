@@ -22,7 +22,7 @@ namespace ScreenShooter.IO
     {
         private static TelegramBotClient _bot;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        private bool onQuit;
+        private bool _onQuit;
         public string ApiKey { get; set; }
         public uint MaxUploadRetries { get; set; } = 3;
 
@@ -42,7 +42,7 @@ namespace ScreenShooter.IO
         public async Task EventLoop()
         {
             _bot.StartReceiving(Array.Empty<UpdateType>());
-            while (!onQuit) await Task.Delay(1000);
+            while (!_onQuit) await Task.Delay(1000);
         }
 
         public async Task SendResult(ExecutionResult result, NewRequestEventArgs e)
@@ -51,11 +51,12 @@ namespace ScreenShooter.IO
             {
                 Logger.Warn("result is null, ignoring");
                 return;
-            };
+            }
+
             var ex = e as TelegramMessageEventArgs;
             if (ex == null)
             {
-                Logger.Warn($"e is not a TelegramMessageEventArgs object, ignoring");
+                Logger.Warn("e is not a TelegramMessageEventArgs object, ignoring");
                 return;
             }
 
@@ -95,7 +96,7 @@ namespace ScreenShooter.IO
 
         public async Task DestroySession()
         {
-            onQuit = true;
+            _onQuit = true;
             await Task.Run(() => _bot.StopReceiving());
         }
 
@@ -116,7 +117,6 @@ namespace ScreenShooter.IO
                 return;
             }
 
-            ;
             Logger.Debug($"Received message from @{message.From.Username}: {message.Text}");
             // TODO: check if the text is a URL
             NewRequest?.Invoke(this, new TelegramMessageEventArgs
