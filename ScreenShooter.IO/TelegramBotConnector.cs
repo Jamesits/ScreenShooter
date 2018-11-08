@@ -61,6 +61,7 @@ namespace ScreenShooter.IO
                 return;
             }
 
+            if (result.Attachments != null)
             foreach (var filePath in result.Attachments)
                 using (var fs = File.OpenRead(filePath))
                 {

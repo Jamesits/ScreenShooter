@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Reflection;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
@@ -15,6 +16,7 @@ namespace ScreenShooter
     internal class Program
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static Program StaticSelf;
 
         private static readonly Random Rnd = new Random();
         private readonly List<IActuator> _actuators = new List<IActuator>();
@@ -41,6 +43,7 @@ namespace ScreenShooter
                 Logger.Info("SIGINT received, cleaning up...");
                 AsyncHelper.RunSync(CleanUp);
             };
+            StaticSelf = this;
 
             var programIdentifier =
                 $"{Assembly.GetExecutingAssembly().GetName().Name} {Assembly.GetExecutingAssembly().GetName().Version}";
@@ -199,6 +202,10 @@ namespace ScreenShooter
         {
             var e = eventArgs.ExceptionObject as Exception;
             Logger.Error($"Something happened. \n\nException:\n{e}\n\nInnerException:{e?.InnerException}");
+            if (eventArgs.IsTerminating)
+            {
+                StaticSelf?.CleanUp();
+            }
         }
 
         #region arguments

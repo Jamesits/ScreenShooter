@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.SqlTypes;
 using System.Threading.Tasks;
 using NLog;
 using PuppeteerSharp;
@@ -67,25 +68,38 @@ namespace ScreenShooter.Actuator
             }
 
             Logger.Debug("Trying to load lazy-loading elements");
-            // https://www.screenshotbin.com/blog/handling-lazy-loaded-webpages-puppeteer
-            var bodyHandle = await page.QuerySelectorAsync("body");
-            var boundingBox = await bodyHandle.BoundingBoxAsync();
-            var viewportHeight = page.Viewport.Height;
-            var viewportIncr = 0;
-
-            // scroll down
-            while (viewportIncr + viewportHeight < boundingBox.Height)
+            try
             {
-                await page.EvaluateExpressionAsync($"window.scrollBy(0, {viewportHeight})");
-                await page.WaitForTimeoutAsync(PageScrollActionWaitDelay);
-                viewportIncr += viewportHeight;
+                // https://www.screenshotbin.com/blog/handling-lazy-loaded-webpages-puppeteer
+                var bodyHandle = await page.QuerySelectorAsync("body");
+                var boundingBox = await bodyHandle.BoundingBoxAsync();
+                var viewportHeight = page.Viewport.Height;
+                var viewportIncr = 0;
+
+                // scroll down
+                while (viewportIncr + viewportHeight < boundingBox.Height)
+                {
+                    await page.EvaluateExpressionAsync($"window.scrollBy(0, {viewportHeight})");
+                    await page.WaitForTimeoutAsync(PageScrollActionWaitDelay);
+                    viewportIncr += viewportHeight;
+                }
+
+                // scroll up
+                await page.EvaluateExpressionAsync("window.scrollTo(0, 0)");
+                await page.WaitForTimeoutAsync(ExtraDownloadWaitDelay);
             }
-
-            // scroll up
-            await page.EvaluateExpressionAsync("window.scrollTo(0, 0)");
-            await page.WaitForTimeoutAsync(ExtraDownloadWaitDelay);
-
-
+            catch (NullReferenceException)
+            {
+                // body cannot be downloaded
+                Logger.Error("Body is missing, possibility a network issue");
+                return new ExecutionResult()
+                {
+                    Identifier = sessionId,
+                    StatusText = "Failed to download web page",
+                    HasPotentialUnfinishedDownloads = true,
+                };
+            }
+            
             // screen shot
             var title = await page.GetTitleAsync();
             var prefix =
