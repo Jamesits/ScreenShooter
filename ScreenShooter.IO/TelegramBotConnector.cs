@@ -65,11 +65,11 @@ namespace ScreenShooter.IO
                 {
                     var trial = 0;
                     var succeed = false;
+                    var fileName = Path.GetFileName(filePath);
                     while (!succeed && trial < MaxUploadRetries)
                     {
                         try
                         {
-                            var fileName = Path.GetFileName(filePath);
                             Logger.Debug($"(retry {trial}/{MaxUploadRetries}) Uploading file \"{fileName}\"");
                             var inputOnlineFile = new InputOnlineFile(fs, fileName);
                             await _bot.SendDocumentAsync(ex.OriginMessage.Chat, inputOnlineFile,
@@ -82,7 +82,7 @@ namespace ScreenShooter.IO
                             trial += 1;
                         }
                     }
-                    
+                    if (!succeed) Logger.Error("Unable to upload file \"{fileName}\"");
                 }
 
             Logger.Debug("Sending session information");
