@@ -5,6 +5,7 @@ using NLog;
 using ScreenShooter.Actuator;
 using Telegram.Bot;
 using Telegram.Bot.Args;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
@@ -23,6 +24,7 @@ namespace ScreenShooter.IO
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private bool onQuit;
         public string ApiKey { get; set; }
+        public uint MaxUploadRetries { get; set; } = 3;
 
         public event EventHandler NewRequest;
 
@@ -45,21 +47,41 @@ namespace ScreenShooter.IO
 
         public async Task SendResult(ExecutionResult result, NewRequestEventArgs e)
         {
+            if (result == null)
+            {
+                Logger.Warn("result is null, ignoring");
+                return;
+            };
             var ex = e as TelegramMessageEventArgs;
             if (ex == null)
             {
-                Logger.Warn($"{e} is not a TelegramMessageEventArgs, ignoring");
+                Logger.Warn($"e is not a TelegramMessageEventArgs object, ignoring");
                 return;
             }
 
             foreach (var filePath in result.Attachments)
                 using (var fs = File.OpenRead(filePath))
                 {
-                    var fileName = Path.GetFileName(filePath);
-                    Logger.Debug($"Uploading file \"{fileName}\"");
-                    var inputOnlineFile = new InputOnlineFile(fs, fileName);
-                    await _bot.SendDocumentAsync(ex.OriginMessage.Chat, inputOnlineFile,
-                        replyToMessageId: ex.OriginMessage.MessageId);
+                    var trial = 0;
+                    var succeed = false;
+                    while (!succeed && trial < MaxUploadRetries)
+                    {
+                        try
+                        {
+                            var fileName = Path.GetFileName(filePath);
+                            Logger.Debug($"({trial}) Uploading file \"{fileName}\"");
+                            var inputOnlineFile = new InputOnlineFile(fs, fileName);
+                            await _bot.SendDocumentAsync(ex.OriginMessage.Chat, inputOnlineFile,
+                                replyToMessageId: ex.OriginMessage.MessageId);
+                            succeed = true;
+                        }
+                        catch (ApiRequestException)
+                        {
+                            Logger.Warn("Telegram API timeout");
+                            trial += 1;
+                        }
+                    }
+                    
                 }
 
             Logger.Debug("Sending session information");

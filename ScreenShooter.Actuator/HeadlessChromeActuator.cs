@@ -62,7 +62,7 @@ namespace ScreenShooter.Actuator
             }
             catch (NavigationException)
             {
-                Logger.Warn("Document download time exceeded for url \"{url}\"");
+                Logger.Warn($"Document download time exceeded for url \"{url}\"");
                 hasDownloadSucceed = false;
             }
 

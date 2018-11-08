@@ -36,4 +36,5 @@ MaxTitlePrependLength=32
 [Connector]
 [[Connector.TelegramBotConnector]]
 ApiKey="your-api-key"
+MaxUploadRetries=3
 ```
