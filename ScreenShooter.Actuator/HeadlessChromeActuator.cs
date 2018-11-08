@@ -10,13 +10,6 @@ namespace ScreenShooter.Actuator
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private Browser _browser;
-
-        private bool _hasDownloadSucceed = true;
-        private Page _page;
-
-        private Guid _sessionId;
-
         public HeadlessChromeActuator()
         {
             DownloadBrowser();
@@ -38,24 +31,24 @@ namespace ScreenShooter.Actuator
         {
             Logger.Debug($"Enter CapturePage() for session {sessionId}");
 
-            _sessionId = sessionId;
+            var hasDownloadSucceed = true;
 
             Logger.Debug("Launch browser");
-            _browser = await Puppeteer.LaunchAsync(new LaunchOptions
+            var browser = await Puppeteer.LaunchAsync(new LaunchOptions
             {
                 Headless = true
             });
             Logger.Debug("Create new tab");
-            _page = await _browser.NewPageAsync();
-            await _page.SetViewportAsync(new ViewPortOptions
+            var page = await browser.NewPageAsync();
+            await page.SetViewportAsync(new ViewPortOptions
             {
                 Width = WindowWidth,
                 Height = WindowHeight
             });
-            Logger.Debug($"Navigate to {url}");
+            Logger.Debug($"Navigate to \"{url}\"");
             try
             {
-                await _page.GoToAsync(
+                await page.GoToAsync(
                     url,
                     PageDownloadTimeout,
                     new[] {WaitUntilNavigation.Networkidle0}
@@ -64,63 +57,66 @@ namespace ScreenShooter.Actuator
             catch (WaitTaskTimeoutException)
             {
                 // TODO: time exceeded
-                Logger.Warn("Page loading time exceeded.");
-                _hasDownloadSucceed = false;
+                Logger.Warn($"Page loading time exceeded for url \"{url}\"");
+                hasDownloadSucceed = false;
+            }
+            catch (NavigationException)
+            {
+                Logger.Warn("Document download time exceeded for url \"{url}\"");
+                hasDownloadSucceed = false;
             }
 
             Logger.Debug("Trying to load lazy-loading elements");
             // https://www.screenshotbin.com/blog/handling-lazy-loaded-webpages-puppeteer
-            var bodyHandle = await _page.QuerySelectorAsync("body");
+            var bodyHandle = await page.QuerySelectorAsync("body");
             var boundingBox = await bodyHandle.BoundingBoxAsync();
-            var viewportHeight = _page.Viewport.Height;
+            var viewportHeight = page.Viewport.Height;
             var viewportIncr = 0;
 
             // scroll down
             while (viewportIncr + viewportHeight < boundingBox.Height)
             {
-                await _page.EvaluateExpressionAsync($"window.scrollBy(0, {viewportHeight})");
-                await _page.WaitForTimeoutAsync(PageScrollActionWaitDelay);
+                await page.EvaluateExpressionAsync($"window.scrollBy(0, {viewportHeight})");
+                await page.WaitForTimeoutAsync(PageScrollActionWaitDelay);
                 viewportIncr += viewportHeight;
             }
 
             // scroll up
-            await _page.EvaluateExpressionAsync("window.scrollTo(0, 0)");
-            await _page.WaitForTimeoutAsync(ExtraDownloadWaitDelay);
+            await page.EvaluateExpressionAsync("window.scrollTo(0, 0)");
+            await page.WaitForTimeoutAsync(ExtraDownloadWaitDelay);
 
 
             // screen shot
-            var title = await _page.GetTitleAsync();
+            var title = await page.GetTitleAsync();
             var prefix =
-                Path.Escape(title.Substring(0, Math.Min(MaxTitlePrependLength, title.Length)) + "-" + _sessionId);
+                Path.Escape(title.Substring(0, Math.Min(MaxTitlePrependLength, title.Length)) + "-" + sessionId);
 
             Logger.Debug("Taking screenshot");
-            await _page.ScreenshotAsync($"{prefix}.png", new ScreenshotOptions
+            await page.ScreenshotAsync($"{prefix}.png", new ScreenshotOptions
             {
                 FullPage = true
             });
             Logger.Debug("Saving PDF");
-            await _page.PdfAsync($"{prefix}.pdf");
+            await page.PdfAsync($"{prefix}.pdf");
             var ret = new ExecutionResult
             {
-                Identifier = _sessionId,
+                Identifier = sessionId,
                 StatusText = "",
                 Title = title,
-                Url = _page.Url,
+                Url = page.Url,
                 Attachments = new[]
                 {
                     $"{prefix}.png",
                     $"{prefix}.pdf"
                 },
-                HasPotentialUnfinishedDownloads = _hasDownloadSucceed
+                HasPotentialUnfinishedDownloads = hasDownloadSucceed
             };
 
             // clean up
             Logger.Debug("Close tab");
-            await _page.CloseAsync();
+            await page.CloseAsync();
             Logger.Debug("Close browser");
-            await _browser.CloseAsync();
-            _page = null;
-            _browser = null;
+            await browser.CloseAsync();
 
             Logger.Debug("Exit CapturePage()");
             return ret;

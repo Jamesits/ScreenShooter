@@ -36,7 +36,11 @@ namespace ScreenShooter
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomainUnhandledException;
             AppDomain.CurrentDomain.ProcessExit += (sender, e) => { AsyncHelper.RunSync(CleanUp); };
-            Console.CancelKeyPress += (sender, e) => { AsyncHelper.RunSync(CleanUp); };
+            Console.CancelKeyPress += (sender, e) =>
+            {
+                Logger.Info("SIGINT received, cleaning up...");
+                AsyncHelper.RunSync(CleanUp);
+            };
 
             var programIdentifier =
                 $"{Assembly.GetExecutingAssembly().GetName().Name} {Assembly.GetExecutingAssembly().GetName().Version}";
@@ -77,7 +81,7 @@ namespace ScreenShooter
                     connector.NewRequest += Connect;
                 }
 
-                Logger.Debug("Waiting for connectors to die");
+                Logger.Info("Entered running state");
                 await Task.WhenAll(_connectorTasks);
                 await CleanUp();
 
@@ -148,12 +152,25 @@ namespace ScreenShooter
             // execute
             var g = Guid.NewGuid();
             Logger.Debug($"Creating session {g}");
-            var ret = await a.CapturePage(ex.Url, g);
-            Logger.Info(ret);
+            try
+            {
+                var ret = await a.CapturePage(ex.Url, g);
+                Logger.Info(ret);
 
-            Logger.Debug("Sending result");
-            await s.SendResult(ret, ex);
-
+                Logger.Debug("Sending result");
+                await s.SendResult(ret, ex);
+            }
+            catch (Exception exception)
+            {
+                CurrentDomainUnhandledException(this, new UnhandledExceptionEventArgs(exception, false));
+                await s.SendResult(new ExecutionResult()
+                {
+                    Url = ex.Url,
+                    HasPotentialUnfinishedDownloads = true,
+                    StatusText = $"Something happened. \nException: {exception}",
+                }, ex);
+            }
+            
             Logger.Debug($"Ending session {g}");
         }
 
