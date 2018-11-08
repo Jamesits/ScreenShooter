@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ScreenShooter": {
+      "commandName": "Project",
+      "commandLineArgs": "https://www.google.com/"
+    }
+  }
+}
