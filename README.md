@@ -4,8 +4,8 @@
 
 An automatic screenshot service.
 
-> Some links have died, but they are still alive;<br>
-> Some links are alive, but they have already died.
+> Some links are alive, but they have already died;<br>
+> Some links have died, but they are still alive.
 
 ## Features
 
