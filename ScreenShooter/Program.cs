@@ -168,6 +168,7 @@ namespace ScreenShooter
                 CurrentDomainUnhandledException(this, new UnhandledExceptionEventArgs(exception, false));
                 await s.SendResult(new ExecutionResult()
                 {
+                    Identifier = g,
                     Url = ex.Url,
                     HasPotentialUnfinishedDownloads = true,
                     StatusText = $"Something happened. \nException: {exception}",
