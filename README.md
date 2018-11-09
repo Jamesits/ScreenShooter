@@ -19,6 +19,15 @@ Messenging Connector:
 
 ## Usage
 
+### Requirements
+
+* Minimal free memory 1GiB (Chrome eats memory, you know)
+* dotnet core 2.1
+
+### Deployment
+
+A complete example of deployment can be found at [wiki/Deploy-Example](wiki/Deploy-Example)
+
 Launch: `dotnet ScreenShooter.dll --config path/to/your/config.toml`
 
 Config file example:
