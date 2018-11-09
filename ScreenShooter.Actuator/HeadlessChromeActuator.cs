@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Threading.Tasks;
 using NLog;
@@ -34,7 +35,13 @@ namespace ScreenShooter.Actuator
         {
             Logger.Debug($"Enter CapturePage() for session {sessionId}");
 
-            var hasDownloadSucceed = true;
+            var ret = new ExecutionResult
+            {
+                Identifier = sessionId,
+                StatusText = "",
+                Attachments = null,
+                HasPotentialUnfinishedDownloads = true
+            };
 
             if (_browser == null || _browser.IsClosed)
             {
@@ -68,13 +75,18 @@ namespace ScreenShooter.Actuator
             {
                 // TODO: time exceeded
                 Logger.Warn($"Page loading time exceeded for url \"{url}\"");
-                hasDownloadSucceed = false;
+                ret.HasPotentialUnfinishedDownloads = false;
             }
             catch (NavigationException)
             {
                 Logger.Warn($"Document download time exceeded for url \"{url}\"");
-                hasDownloadSucceed = false;
+                ret.HasPotentialUnfinishedDownloads = false;
             }
+
+            ret.Url = page.Url;
+            ret.Title = await page.GetTitleAsync();
+            var prefix =
+                Path.Escape(ret.Title.Substring(0, Math.Min(MaxTitlePrependLength, ret.Title.Length)) + "-" + sessionId);
 
             Logger.Debug("Trying to load lazy-loading elements");
             try
@@ -108,45 +120,52 @@ namespace ScreenShooter.Actuator
                     HasPotentialUnfinishedDownloads = true,
                 };
             }
-            
-            // screen shot
-            var title = await page.GetTitleAsync();
-            var prefix =
-                Path.Escape(title.Substring(0, Math.Min(MaxTitlePrependLength, title.Length)) + "-" + sessionId);
 
-            Logger.Debug("Taking screenshot");
-            await page.ScreenshotAsync($"{prefix}.png", new ScreenshotOptions
+            var attachments = new List<string>();
+            // screen shot
+            try
             {
-                FullPage = true
-            });
-            Logger.Debug("Saving PDF");
-            await page.PdfAsync($"{prefix}.pdf", new PdfOptions()
-            {
-                HeaderTemplate = "<title /> - <date />",
-                FooterTemplate = "<url /> - Captured by ScreenShooter - https://github.com/Jamesits/ScreenShooter - <pageNumber />/<totalPages />",
-                DisplayHeaderFooter = true,
-                Format = PaperFormat.A4,
-                MarginOptions = new MarginOptions()
+                Logger.Debug("Saving PDF");
+                await page.PdfAsync($"{prefix}.pdf", new PdfOptions()
                 {
-                    Bottom = "0.5in",
-                    Top = "0.5in",
-                    Left = "0.3in",
-                    Right = "0.3in",
-                },
-            });
-            var ret = new ExecutionResult
+                    HeaderTemplate = "<title /> - <date />",
+                    FooterTemplate =
+                        "<url /> - Captured by ScreenShooter - https://github.com/Jamesits/ScreenShooter - <pageNumber />/<totalPages />",
+                    DisplayHeaderFooter = true,
+                    Format = PaperFormat.A4,
+                    MarginOptions = new MarginOptions()
+                    {
+                        Bottom = "0.5in",
+                        Top = "0.5in",
+                        Left = "0.3in",
+                        Right = "0.3in",
+                    },
+                });
+                attachments.Add($"{prefix}.pdf");
+            }
+            catch (TargetClosedException e)
             {
-                Identifier = sessionId,
-                StatusText = "",
-                Title = title,
-                Url = page.Url,
-                Attachments = new[]
+                ret.StatusText += "Possible out of memory when requesting PDF\n";
+                Logger.Error($"Something happened. \n\nException:\n{e}\n\nInnerException:{e?.InnerException}");
+            }
+
+            try
+            {
+                Logger.Debug("Taking screenshot");
+                await page.ScreenshotAsync($"{prefix}.png", new ScreenshotOptions
                 {
-                    $"{prefix}.png",
-                    $"{prefix}.pdf"
-                },
-                HasPotentialUnfinishedDownloads = hasDownloadSucceed
-            };
+                    FullPage = true
+                });
+                attachments.Add($"{prefix}.png");
+            }
+            catch (TargetClosedException e)
+            {
+                // possibility out of memory, see https://github.com/Jamesits/ScreenShooter/issues/1
+                ret.StatusText += "Possible out of memory when requesting screenshot\n";
+                Logger.Error($"Something happened. \n\nException:\n{e}\n\nInnerException:{e?.InnerException}");
+            }
+
+            ret.Attachments = attachments.ToArray();
 
             // clean up
             Logger.Debug("Close tab");
