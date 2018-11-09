@@ -186,7 +186,7 @@ namespace ScreenShooter.Actuator
                 Logger.Debug("Kill context");
                 await context.CloseAsync();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Logger.Error($"Something happened on cleaning up. \n\nException:\n{e}\n\nInnerException:{e?.InnerException}");
             }
