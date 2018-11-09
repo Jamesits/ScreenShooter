@@ -132,6 +132,7 @@ namespace ScreenShooter.Actuator
                     FooterTemplate =
                         "<url /> - Captured by ScreenShooter - https://github.com/Jamesits/ScreenShooter - <pageNumber />/<totalPages />",
                     DisplayHeaderFooter = true,
+                    PrintBackground = true,
                     Format = PaperFormat.A4,
                     MarginOptions = new MarginOptions()
                     {
