@@ -149,22 +149,43 @@ namespace ScreenShooter.IO
             }
             else
             {
-                // assume is a URL
-                // TODO: check if the text is a URL
+                // check if is valid url
 
-                await _bot.SendTextMessageAsync(message.Chat, "Added to queue, please wait",
-                    replyToMessageId: message.MessageId);
-                NewRequest?.Invoke(this, new TelegramMessageEventArgs
+                var result = Uri.TryCreate(message.Text, UriKind.Absolute, out var uriResult);
+
+                if (!(result && (
+                                 uriResult.Scheme == Uri.UriSchemeHttp
+                                 || uriResult.Scheme == Uri.UriSchemeHttps
+                                 || uriResult.Scheme == Uri.UriSchemeFtp
+                             )
+                             && uriResult.IsLoopback == false
+                    ))
                 {
-                    OriginMessage = message,
-                    Url = message.Text
-                });
+                    await _bot.SendTextMessageAsync(message.Chat, "Added to queue, please wait",
+                        replyToMessageId: message.MessageId);
+                    NewRequest?.Invoke(this, new TelegramMessageEventArgs
+                    {
+                        OriginMessage = message,
+                        Url = uriResult.AbsoluteUri,
+                    });
+
+                }
+                else
+                {
+                    // if is not valid URL
+                    await _bot.SendTextMessageAsync(
+                        message.Chat, 
+                        "Sorry, this is not a valid URL",
+                        replyToMessageId: message.MessageId
+                        );
+                }
+
             }
 
             
         }
 
-        private void OnReceiveError(object sender, ReceiveErrorEventArgs receiveErrorEventArgs)
+        private static void OnReceiveError(object sender, ReceiveErrorEventArgs receiveErrorEventArgs)
         {
             Logger.Error(
                 $"Telegram Bot API receive error {receiveErrorEventArgs.ApiRequestException.ErrorCode}: {receiveErrorEventArgs.ApiRequestException.Message}");
