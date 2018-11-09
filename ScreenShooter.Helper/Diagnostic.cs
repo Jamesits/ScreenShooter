@@ -32,7 +32,7 @@ namespace ScreenShooter.Helper
 
             sb.AppendFormat("Current MEM: {0}MiB\n", WorkingSet / 1048576);
             sb.AppendFormat("Peak MEM: {0}MiB\n", PeakWorkingSet / 1048576);
-            sb.AppendFormat("real {0}s\n", TotalProcessorTime / 1000);
+            sb.AppendFormat("real {0}s\n", TotalProcessorTime);
             sb.AppendFormat("user {0}s\n", UserProcessorTime);
             sb.AppendFormat("sys {0}s\n", SystemProcessorTime);
 
