@@ -136,6 +136,11 @@ namespace ScreenShooter.IO
                             "Welcome!\nDrop a URL, get a PNG + PDF.\nDemo development bot, service not guaranteed.\nSet up yours at https://github.com/Jamesits/ScreenShooter",
                             replyToMessageId: message.MessageId);
                         break;
+                    case "/DiagnosticInfo":
+                        await _bot.SendTextMessageAsync(message.Chat,
+                            new Helper.RuntimeInformation().ToString(),
+                            replyToMessageId: message.MessageId);
+                        break;
                     default:
                         await _bot.SendTextMessageAsync(message.Chat, "Unknown command. \n\n/help - get help",
                             replyToMessageId: message.MessageId);
