@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Reflection;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
@@ -17,6 +16,7 @@ namespace ScreenShooter
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static Program _staticSelf;
+        private static string _programIdentifier;
 
         private static readonly Random Rnd = new Random();
         private readonly List<IActuator> _actuators = new List<IActuator>();
@@ -45,10 +45,10 @@ namespace ScreenShooter
             };
             _staticSelf = this;
 
-            var programIdentifier =
+            _programIdentifier =
                 $"{Assembly.GetExecutingAssembly().GetName().Name} {Assembly.GetExecutingAssembly().GetName().Version}";
-            Logger.Info(programIdentifier);
-            Console.Title = programIdentifier;
+            Logger.Info(_programIdentifier);
+            Console.Title = _programIdentifier;
 
             if (ConfigPath != null) _config = Toml.ReadFile(ConfigPath);
 

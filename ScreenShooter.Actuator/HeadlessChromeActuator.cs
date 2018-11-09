@@ -121,17 +121,17 @@ namespace ScreenShooter.Actuator
             Logger.Debug("Saving PDF");
             await page.PdfAsync($"{prefix}.pdf", new PdfOptions()
             {
-                FooterTemplate = "<url> - Captured by ScreenShooter - <pageNumber>/<totalPages>",
+                HeaderTemplate = "<title /> - <date />",
+                FooterTemplate = "<url /> - Captured by ScreenShooter - https://github.com/Jamesits/ScreenShooter - <pageNumber />/<totalPages />",
                 DisplayHeaderFooter = true,
                 Format = PaperFormat.A4,
                 MarginOptions = new MarginOptions()
                 {
-                    Bottom = "1in",
-                    Top = "1in",
-                    Left = "1in",
-                    Right = "1in",
+                    Bottom = "0.5in",
+                    Top = "0.5in",
+                    Left = "0.3in",
+                    Right = "0.3in",
                 },
-                HeaderTemplate = "<title> - <date>",
             });
             var ret = new ExecutionResult
             {

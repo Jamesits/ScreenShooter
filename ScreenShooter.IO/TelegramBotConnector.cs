@@ -84,7 +84,12 @@ namespace ScreenShooter.IO
                             trial += 1;
                         }
                     }
-                    if (!succeed) Logger.Error("Unable to upload file \"{fileName}\"");
+
+                    if (!succeed)
+                    {
+                        Logger.Error("Unable to upload file \"{fileName}\"");
+                        result.StatusText += "Unable to upload file \"{fileName}\".\n";
+                    }
                 }
 
             Logger.Debug("Sending session information");
