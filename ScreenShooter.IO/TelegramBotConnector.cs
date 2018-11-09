@@ -161,6 +161,7 @@ namespace ScreenShooter.IO
                              && uriResult.IsLoopback == false
                     )
                 {
+                    // is a valid URL
                     await _bot.SendTextMessageAsync(message.Chat, "Added to queue, please wait",
                         replyToMessageId: message.MessageId);
                     NewRequest?.Invoke(this, new TelegramMessageEventArgs
