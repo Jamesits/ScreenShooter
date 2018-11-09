@@ -14,6 +14,8 @@ namespace ScreenShooter.Actuator
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private Browser _browser;
 
+        private bool _requireNewBrowserInstance = false;
+
         public HeadlessChromeActuator()
         {
             DownloadBrowser();
@@ -31,6 +33,16 @@ namespace ScreenShooter.Actuator
         public int ExtraDownloadWaitDelay { get; set; } = 10000;
         public int MaxTitlePrependLength { get; set; } = 32;
 
+        private async Task NewBrowser()
+        {
+            Logger.Debug("Launch browser");
+            _browser = await Puppeteer.LaunchAsync(new LaunchOptions
+            {
+                Headless = true,
+                DumpIO = true,
+            });
+        }
+
         public async Task<ExecutionResult> CapturePage(string url, Guid sessionId)
         {
             Logger.Debug($"Enter CapturePage() for session {sessionId}");
@@ -43,14 +55,9 @@ namespace ScreenShooter.Actuator
                 HasPotentialUnfinishedDownloads = true
             };
 
-            if (_browser == null || _browser.IsClosed)
+            if (_browser == null || _browser.IsClosed || _requireNewBrowserInstance)
             {
-                Logger.Debug("Launch browser");
-                _browser = await Puppeteer.LaunchAsync(new LaunchOptions
-                {
-                    Headless = true,
-                    DumpIO = true,
-                });
+                await NewBrowser();
             }
             
             Logger.Debug("Create incognito session");
@@ -146,8 +153,10 @@ namespace ScreenShooter.Actuator
             }
             catch (TargetClosedException e)
             {
+                // possibility out of memory, see https://github.com/Jamesits/ScreenShooter/issues/1
                 ret.StatusText += "Possible out of memory when requesting PDF\n";
                 Logger.Error($"Something happened. \n\nException:\n{e}\n\nInnerException:{e?.InnerException}");
+                _requireNewBrowserInstance = true;
             }
 
             try
@@ -164,6 +173,7 @@ namespace ScreenShooter.Actuator
                 // possibility out of memory, see https://github.com/Jamesits/ScreenShooter/issues/1
                 ret.StatusText += "Possible out of memory when requesting screenshot\n";
                 Logger.Error($"Something happened. \n\nException:\n{e}\n\nInnerException:{e?.InnerException}");
+                _requireNewBrowserInstance = true;
             }
 
             ret.Attachments = attachments.ToArray();
