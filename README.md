@@ -21,8 +21,10 @@ Messenging Connector:
 
 ### Requirements
 
-* Minimal free memory 1GiB (Chrome eats memory, you know)
+* Minimal free memory 512MiB (Chrome eats memory, you know)
 * dotnet core 2.1
+
+On machine with <4GiB memory, please set `LowMemoryMode=true` and use a >2GiB swap.
 
 ### Deployment
 
@@ -33,6 +35,9 @@ Launch: `dotnet ScreenShooter.dll --config path/to/your/config.toml`
 Config file example:
 
 ```toml
+[GlobalConfig]
+LowMemoryMode=false
+
 [Actuator]
 [[Actuator.HeadlessChromeActuator]]
 WindowWidth=1920
