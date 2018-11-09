@@ -16,7 +16,7 @@ namespace ScreenShooter
     internal class Program
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        private static Program StaticSelf;
+        private static Program _staticSelf;
 
         private static readonly Random Rnd = new Random();
         private readonly List<IActuator> _actuators = new List<IActuator>();
@@ -43,7 +43,7 @@ namespace ScreenShooter
                 Logger.Info("SIGINT received, cleaning up...");
                 AsyncHelper.RunSync(CleanUp);
             };
-            StaticSelf = this;
+            _staticSelf = this;
 
             var programIdentifier =
                 $"{Assembly.GetExecutingAssembly().GetName().Name} {Assembly.GetExecutingAssembly().GetName().Version}";
@@ -205,7 +205,7 @@ namespace ScreenShooter
             Logger.Error($"Something happened. \n\nException:\n{e}\n\nInnerException:{e?.InnerException}");
             if (eventArgs.IsTerminating)
             {
-                StaticSelf?.CleanUp();
+                _staticSelf?.CleanUp();
             }
         }
 
