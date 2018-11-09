@@ -41,7 +41,8 @@ namespace ScreenShooter.Actuator
                 Logger.Debug("Launch browser");
                 _browser = await Puppeteer.LaunchAsync(new LaunchOptions
                 {
-                    Headless = true
+                    Headless = true,
+                    DumpIO = true,
                 });
             }
             
