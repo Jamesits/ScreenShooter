@@ -155,7 +155,7 @@ namespace ScreenShooter.Actuator
             {
                 // possibility out of memory, see https://github.com/Jamesits/ScreenShooter/issues/1
                 ret.StatusText += "Possible out of memory when requesting PDF\n";
-                Logger.Error($"Something happened. \n\nException:\n{e}\n\nInnerException:{e?.InnerException}");
+                Logger.Error($"Something happened on requesting PDF. \n\nException:\n{e}\n\nInnerException:{e?.InnerException}");
                 _requireNewBrowserInstance = true;
             }
 
@@ -172,17 +172,24 @@ namespace ScreenShooter.Actuator
             {
                 // possibility out of memory, see https://github.com/Jamesits/ScreenShooter/issues/1
                 ret.StatusText += "Possible out of memory when requesting screenshot\n";
-                Logger.Error($"Something happened. \n\nException:\n{e}\n\nInnerException:{e?.InnerException}");
+                Logger.Error($"Something happened on requesting screenshot. \n\nException:\n{e}\n\nInnerException:{e?.InnerException}");
                 _requireNewBrowserInstance = true;
             }
 
             ret.Attachments = attachments.ToArray();
 
             // clean up
-            Logger.Debug("Close tab");
-            await page.CloseAsync();
-            Logger.Debug("Kill context");
-            await context.CloseAsync();
+            try
+            {
+                Logger.Debug("Close tab");
+                await page.CloseAsync();
+                Logger.Debug("Kill context");
+                await context.CloseAsync();
+            }
+            catch (Exception)
+            {
+                Logger.Error($"Something happened on cleaning up. \n\nException:\n{e}\n\nInnerException:{e?.InnerException}");
+            }
 
             Logger.Debug("Exit CapturePage()");
             return ret;
