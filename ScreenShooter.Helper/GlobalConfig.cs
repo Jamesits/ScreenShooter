@@ -6,6 +6,7 @@ namespace ScreenShooter
 {
     public class GlobalConfig
     {
-        public bool LowMemoryMode { get; set; } = false;
+        public bool AggressiveGc { get; set; } = false;
+        public long LowMemoryAddMemoryPressure { get; set; } = 0;
     }
 }

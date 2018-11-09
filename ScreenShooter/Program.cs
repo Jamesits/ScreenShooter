@@ -56,7 +56,14 @@ namespace ScreenShooter
             {
                 Logger.Debug("Entering daemon mode");
 
-                Helper.Globals.GlobalConfig = _config.Get<GlobalConfig>("GlobalConfig");
+                Globals.GlobalConfig = _config.Get<GlobalConfig>("GlobalConfig");
+
+                // set up GC
+                if (Globals.GlobalConfig.LowMemoryAddMemoryPressure > 0)
+                {
+                    Logger.Debug($"Adding memory pressure {Globals.GlobalConfig.LowMemoryAddMemoryPressure * 2 / 1048576}MiB");
+                    GC.AddMemoryPressure(Globals.GlobalConfig.LowMemoryAddMemoryPressure * 2);
+                }
 
                 Logger.Debug("Enumerating actuators");
                 var actuators = _config.Get<TomlTable>("Actuator");
@@ -150,7 +157,7 @@ namespace ScreenShooter
                 return;
             }
 
-            if (Helper.Globals.GlobalConfig.LowMemoryMode)
+            if (Globals.GlobalConfig.AggressiveGc)
             {
                 Logger.Debug("GC requested");
                 GC.Collect();

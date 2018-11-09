@@ -36,7 +36,10 @@ Config file example:
 
 ```toml
 [GlobalConfig]
-LowMemoryMode=false
+# GC before processing every request
+AggressiveGc=true
+# Pre-allocate n*2 bytes for other programs (Chromium!) running on the same machine
+LowMemoryAddMemoryPressure=0
 
 [Actuator]
 [[Actuator.HeadlessChromeActuator]]
