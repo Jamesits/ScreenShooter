@@ -11,6 +11,7 @@ namespace ScreenShooter.Actuator
     public class HeadlessChromeActuator : IActuator
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private Browser _browser;
 
         public HeadlessChromeActuator()
         {
@@ -35,13 +36,19 @@ namespace ScreenShooter.Actuator
 
             var hasDownloadSucceed = true;
 
-            Logger.Debug("Launch browser");
-            var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+            if (_browser == null)
             {
-                Headless = true
-            });
+                Logger.Debug("Launch browser");
+                _browser = await Puppeteer.LaunchAsync(new LaunchOptions
+                {
+                    Headless = true
+                });
+            }
+            
+            Logger.Debug("Create incognito session");
+            var context = await _browser.CreateIncognitoBrowserContextAsync();
             Logger.Debug("Create new tab");
-            var page = await browser.NewPageAsync();
+            var page = await context.NewPageAsync();
             await page.SetViewportAsync(new ViewPortOptions
             {
                 Width = WindowWidth,
@@ -143,11 +150,18 @@ namespace ScreenShooter.Actuator
             // clean up
             Logger.Debug("Close tab");
             await page.CloseAsync();
-            Logger.Debug("Close browser");
-            await browser.CloseAsync();
+            Logger.Debug("Kill context");
+            await context.CloseAsync();
 
             Logger.Debug("Exit CapturePage()");
             return ret;
+        }
+
+        ~HeadlessChromeActuator()
+        {
+            Logger.Debug("Close browser");
+            AsyncHelper.RunSync(_browser.CloseAsync);
+            _browser = null;
         }
 
         private void DownloadBrowser()
