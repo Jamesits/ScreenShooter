@@ -36,7 +36,7 @@ namespace ScreenShooter.Actuator
 
             var hasDownloadSucceed = true;
 
-            if (_browser == null)
+            if (_browser == null || _browser.IsClosed)
             {
                 Logger.Debug("Launch browser");
                 _browser = await Puppeteer.LaunchAsync(new LaunchOptions
@@ -159,6 +159,7 @@ namespace ScreenShooter.Actuator
 
         ~HeadlessChromeActuator()
         {
+            if (_browser == null) return;
             Logger.Debug("Close browser");
             AsyncHelper.RunSync(_browser.CloseAsync);
             _browser = null;

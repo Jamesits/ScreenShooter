@@ -155,6 +155,8 @@ namespace ScreenShooter
             // execute
             var g = Guid.NewGuid();
             Logger.Debug($"Creating session {g}");
+            RuntimeInformation.OnGoingRequests += 1;
+
             try
             {
                 var ret = await a.CapturePage(ex.Url, g);
@@ -162,6 +164,7 @@ namespace ScreenShooter
 
                 Logger.Debug("Sending result");
                 await s.SendResult(ret, ex);
+                RuntimeInformation.FinishedRequests += 1;
             }
             catch (Exception exception)
             {
@@ -173,9 +176,14 @@ namespace ScreenShooter
                     HasPotentialUnfinishedDownloads = true,
                     StatusText = $"Something happened. \nException: {exception}",
                 }, ex);
+
+                RuntimeInformation.FailedRequests += 1;
             }
-            
-            Logger.Debug($"Ending session {g}");
+            finally
+            {
+                RuntimeInformation.OnGoingRequests -= 1;
+                Logger.Debug($"Ending session {g}");
+            }
         }
 
         private async Task CleanUp()
