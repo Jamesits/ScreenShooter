@@ -135,9 +135,10 @@ namespace ScreenShooter.Actuator
                 Logger.Debug("Saving PDF");
                 await page.PdfAsync($"{prefix}.pdf", new PdfOptions()
                 {
-                    HeaderTemplate = "<title /> - <date />",
-                    FooterTemplate =
-                        "<url /> - Captured by ScreenShooter - https://github.com/Jamesits/ScreenShooter - <pageNumber />/<totalPages />",
+                    // TODO: header and footer is not in the correct position, ignore for now
+                    // HeaderTemplate = "<title /> - <date />",
+                    // FooterTemplate =
+                    //    "<url /> - Captured by ScreenShooter - https://github.com/Jamesits/ScreenShooter - <pageNumber />/<totalPages />",
                     DisplayHeaderFooter = true,
                     PrintBackground = true,
                     Format = PaperFormat.A4,
