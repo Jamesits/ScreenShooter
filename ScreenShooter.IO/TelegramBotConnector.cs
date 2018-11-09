@@ -153,13 +153,13 @@ namespace ScreenShooter.IO
 
                 var result = Uri.TryCreate(message.Text, UriKind.Absolute, out var uriResult);
 
-                if (!(result && (
+                if (result && (
                                  uriResult.Scheme == Uri.UriSchemeHttp
                                  || uriResult.Scheme == Uri.UriSchemeHttps
                                  || uriResult.Scheme == Uri.UriSchemeFtp
                              )
                              && uriResult.IsLoopback == false
-                    ))
+                    )
                 {
                     await _bot.SendTextMessageAsync(message.Chat, "Added to queue, please wait",
                         replyToMessageId: message.MessageId);
