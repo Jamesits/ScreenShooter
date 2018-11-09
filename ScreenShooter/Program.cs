@@ -12,7 +12,7 @@ using ScreenShooter.IO;
 namespace ScreenShooter
 {
     [Command(Name = "ScreenShooter.exe", Description = "Simple web page screen shot utility")]
-    internal class Program
+    public class Program
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static Program _staticSelf;
@@ -55,6 +55,8 @@ namespace ScreenShooter
             if (ConfigPath != null && Address == null)
             {
                 Logger.Debug("Entering daemon mode");
+
+                Helper.Globals.GlobalConfig = _config.Get<GlobalConfig>("GlobalConfig");
 
                 Logger.Debug("Enumerating actuators");
                 var actuators = _config.Get<TomlTable>("Actuator");
@@ -146,6 +148,12 @@ namespace ScreenShooter
             {
                 Logger.Warn("eventArgs is not a NewRequestEventArgs, ignoring");
                 return;
+            }
+
+            if (Helper.Globals.GlobalConfig.LowMemoryMode)
+            {
+                Logger.Debug("GC requested");
+                GC.Collect();
             }
 
             // randomly select a actuator
