@@ -5,16 +5,20 @@ namespace ScreenShooter.Helper
 {
     public static class Path
     {
+        public static readonly char[] InvalidFileChars = System.IO.Path.GetInvalidFileNameChars();
+        public static readonly char[] FilteredChars = {'/', '\\', ',', ':', '"', '\''};
         public static string Escape(string s)
         {
-            var invalidFileChars = System.IO.Path.GetInvalidFileNameChars();
-
             StringBuilder sb = new StringBuilder();
-            foreach (char c in s)
+            foreach (var c in s)
             {
-                if (!(invalidFileChars.Contains(c) || @"\/".ToCharArray().Contains(c)))
+                if (!(InvalidFileChars.Contains(c) || FilteredChars.Contains(c)))
                 {
                     sb.Append(c);
+                }
+                else
+                {
+                    sb.Append('_');
                 }
             }
             return sb.ToString();
