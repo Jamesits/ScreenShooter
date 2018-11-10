@@ -22,11 +22,12 @@ namespace ScreenShooter
         private readonly List<IActuator> _actuators = new List<IActuator>();
         private readonly List<IConnector> _connectors = new List<IConnector>();
         private readonly List<Task> _connectorTasks = new List<Task>();
+        private readonly List<Task> _queueTasks = new List<Task>();
         private readonly Helper.Queue<Helper.UserRequestEventArgs> _requestQueue = new Helper.Queue<Helper.UserRequestEventArgs>();
         private TomlTable _config;
 
         private bool _hasEnteredCleanUpRoutine;
-        private Mutex _busyMutex = new Mutex(false);
+        private readonly Mutex _busyMutex = new Mutex(false);
 
         public static int Main(string[] args)
         {
@@ -186,10 +187,11 @@ namespace ScreenShooter
                 await Task.Run(() => { GC.Collect(); });
             }
 
-            await ProcessRequests();
+            // notify for new request
+            ProcessRequests();
         }
 
-        private async Task ProcessRequests()
+        private void ProcessRequests()
         {
             if (!_busyMutex.WaitOne(0))
             {
@@ -198,49 +200,64 @@ namespace ScreenShooter
             }
             while (_requestQueue.Count > 0)
             {
-                var currentRequest = _requestQueue.Get();
-                var requester = currentRequest.Requester as IConnector;
-                if (requester == null)
+                if (_queueTasks.Count >= Globals.GlobalConfig.ParallelJobs)
                 {
-                    Logger.Error("Requester is not a IConnector");
-                    return;
+                    // wait for an empty slot
+                    var index = Task.WaitAny(_queueTasks.ToArray());
+                    _queueTasks.RemoveAt(index);
                 }
-                RuntimeInformation.OnGoingRequests += 1;
-                Logger.Debug($"Processing request {currentRequest.Id}");
-
-                // randomly select a actuator
-                // TODO: verify if actuator has sufficient capability
-                var r = Rnd.Next(_actuators.Count);
-                var a = _actuators[r];
-
-                try
-                { // try get a result from actuator
-                    var ret = await a.CapturePage(this, currentRequest);
-                    Logger.Info(ret);
-
-                    Logger.Debug("Sending result");
-                    await requester.SendResult(this, ret);
-                    RuntimeInformation.FinishedRequests += 1;
-                }
-                catch (Exception exception)
-                { // if failed, we make a result ourselves
-                    CurrentDomainUnhandledException(this, new UnhandledExceptionEventArgs(exception, false));
-                    await requester.SendResult(this, new CaptureResponseEventArgs()
-                    {
-                        Request = currentRequest,
-                        HasPotentialUnfinishedDownloads = true,
-                        StatusText = $"Something happened. \nException: {exception}",
-                    });
-
-                    RuntimeInformation.FailedRequests += 1;
-                }
-                finally
+                else
                 {
-                    RuntimeInformation.OnGoingRequests -= 1;
-                    Logger.Debug($"Finished request {currentRequest.Id}");
+                    // run!
+                    _queueTasks.Add(NextRequest());
                 }
             }
             _busyMutex.ReleaseMutex();
+        }
+
+        private async Task NextRequest()
+        {
+            var currentRequest = _requestQueue.Get();
+            var requester = currentRequest.Requester as IConnector;
+            if (requester == null)
+            {
+                Logger.Error("Requester is not a IConnector");
+                return;
+            }
+            RuntimeInformation.OnGoingRequests += 1;
+            Logger.Debug($"Processing request {currentRequest.Id}");
+
+            // randomly select a actuator
+            // TODO: verify if actuator has sufficient capability
+            var r = Rnd.Next(_actuators.Count);
+            var a = _actuators[r];
+
+            try
+            { // try get a result from actuator
+                var ret = await a.CapturePage(this, currentRequest);
+                Logger.Info(ret);
+
+                Logger.Debug("Sending result");
+                await requester.SendResult(this, ret);
+                RuntimeInformation.FinishedRequests += 1;
+            }
+            catch (Exception exception)
+            { // if failed, we make a result ourselves
+                CurrentDomainUnhandledException(this, new UnhandledExceptionEventArgs(exception, false));
+                await requester.SendResult(this, new CaptureResponseEventArgs()
+                {
+                    Request = currentRequest,
+                    HasPotentialUnfinishedDownloads = true,
+                    StatusText = $"Something happened. \nException: {exception}",
+                });
+
+                RuntimeInformation.FailedRequests += 1;
+            }
+            finally
+            {
+                RuntimeInformation.OnGoingRequests -= 1;
+                Logger.Debug($"Finished request {currentRequest.Id}");
+            }
         }
 
         private async Task CleanUp()
@@ -253,6 +270,9 @@ namespace ScreenShooter
 
             Logger.Debug("Enter CleanUp()");
             _hasEnteredCleanUpRoutine = true;
+            Logger.Debug("Waiting for all running requests to finish");
+            await Task.WhenAll(_queueTasks);
+            Logger.Debug("Waiting for all connector to spin down");
             foreach (var connector in _connectors) await connector.DestroySession();
             await Task.WhenAll(_connectorTasks);
             Logger.Debug("Exiting CleanUp()");

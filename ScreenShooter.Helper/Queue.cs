@@ -39,7 +39,7 @@ namespace ScreenShooter.Helper
                 _priorityQueue.RemoveAt(0);
                 return ret;
             }
-            catch (IndexOutOfRangeException)
+            catch (ArgumentOutOfRangeException)
             {
 
             }
@@ -50,12 +50,12 @@ namespace ScreenShooter.Helper
                 _queue.RemoveAt(0);
                 return ret;
             }
-            catch (IndexOutOfRangeException)
+            catch (ArgumentOutOfRangeException)
             {
                 
             }
 
-            throw new IndexOutOfRangeException();
+            throw new ArgumentOutOfRangeException();
         }
     }
 }
