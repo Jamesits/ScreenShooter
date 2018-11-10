@@ -133,11 +133,11 @@ namespace ScreenShooter.IO
                     case "/start":
                     case "/help":
                         await _bot.SendTextMessageAsync(message.Chat, 
-                            "Welcome!\nDrop a URL, get a PNG + PDF.\nDemo development bot, service not guaranteed.\nSet up yours at https://github.com/Jamesits/ScreenShooter",
+                            $"Welcome!\nDrop a URL, get a PNG + PDF.\nDemo development bot, service not guaranteed.\nSet up yours at https://github.com/Jamesits/ScreenShooter \n\n{Globals.ProgramIdentifier}",
                             replyToMessageId: message.MessageId);
                         break;
                     case "/UserInfo":
-                        await _bot.SendTextMessageAsync(message.Chat, $"User ID: {message.Contact.UserId}", replyToMessageId: message.MessageId);
+                        await _bot.SendTextMessageAsync(message.Chat, $"User ID: {message.Chat.Id}", replyToMessageId: message.MessageId);
                         break;
                     case "/DiagnosticInfo":
                         await _bot.SendTextMessageAsync(message.Chat, RuntimeInformation.ToString(), replyToMessageId: message.MessageId);
