@@ -37,6 +37,14 @@ namespace ScreenShooter.IO
 
             _bot.OnMessage += OnMessageReceived;
             _bot.OnReceiveError += OnReceiveError;
+
+            foreach (var administrator in Administrators)
+            {
+                await _bot.SendTextMessageAsync(
+                    administrator,
+                    $"{Globals.ProgramIdentifier}\n\nBot has been restarted."
+                );
+            }
         }
 
         public async Task EventLoop()

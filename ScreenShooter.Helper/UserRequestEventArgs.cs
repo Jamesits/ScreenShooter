@@ -19,5 +19,5 @@ namespace ScreenShooter.Helper
         public List<UserRequestType> RequestTypes { get; set; }
     }
 
-    public delegate void UserRequestEventHandler(Object sender, UserRequestEventArgs e);
+    public delegate void UserRequestEventHandler(object sender, UserRequestEventArgs e);
 }
