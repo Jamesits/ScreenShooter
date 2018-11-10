@@ -1,12 +1,10 @@
-﻿using System;
+﻿using NLog;
+using ScreenShooter.Helper;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
-using NLog;
-using ScreenShooter.Actuator;
-using ScreenShooter.Helper;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
@@ -182,6 +180,7 @@ namespace ScreenShooter.IO
                         Url = uriResult.AbsoluteUri,
                         RequestContext = message,
                         RequestTypes = new List<UserRequestType>{UserRequestType.Pdf, UserRequestType.Png},
+                        IsPriority = Administrators.Contains(message.Chat.Id),
                     });
 
                 }

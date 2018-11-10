@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using NLog;
+﻿using NLog;
 using PuppeteerSharp;
 using PuppeteerSharp.Media;
 using ScreenShooter.Helper;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ScreenShooter.Actuator
 {

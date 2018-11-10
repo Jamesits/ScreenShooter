@@ -1,6 +1,6 @@
-﻿using System.Threading.Tasks;
-using NLog;
+﻿using NLog;
 using ScreenShooter.Helper;
+using System.Threading.Tasks;
 
 namespace ScreenShooter.IO
 {

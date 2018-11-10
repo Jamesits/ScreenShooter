@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using McMaster.Extensions.CommandLineUtils;
+﻿using McMaster.Extensions.CommandLineUtils;
 using Nett;
 using NLog;
 using ScreenShooter.Actuator;
 using ScreenShooter.Helper;
 using ScreenShooter.IO;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ScreenShooter
 {
