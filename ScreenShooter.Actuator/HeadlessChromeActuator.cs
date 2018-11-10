@@ -13,7 +13,14 @@ namespace ScreenShooter.Actuator
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private Browser _browser;
 
-        private bool _requireNewBrowserInstance = false;
+        public bool RequireNewBrowserInstancePerSession { get; set; } = true;
+        private bool _requireNewBrowserInstance;
+
+        private readonly LaunchOptions _defaultBrowserLaunchOptions = new LaunchOptions
+        {
+            Headless = true,
+            DumpIO = true,
+        };
 
         public HeadlessChromeActuator()
         {
@@ -35,32 +42,40 @@ namespace ScreenShooter.Actuator
         private async Task NewBrowser()
         {
             Logger.Debug("Launch browser");
-            _browser = await Puppeteer.LaunchAsync(new LaunchOptions
-            {
-                Headless = true,
-                DumpIO = true,
-            });
+            _browser = await Puppeteer.LaunchAsync(_defaultBrowserLaunchOptions);
         }
 
-        public async Task<ExecutionResult> CapturePage(string url, Guid sessionId)
+        public async Task<CaptureResponseEventArgs> CapturePage(object sender, UserRequestEventArgs e)
         {
-            Logger.Debug($"Enter CapturePage() for session {sessionId}");
+            Logger.Debug($"Enter CapturePage() for session {e.Id}");
 
-            var ret = new ExecutionResult
+            var ret = new CaptureResponseEventArgs
             {
-                Identifier = sessionId,
+                Request = e,
                 StatusText = "",
                 Attachments = null,
                 HasPotentialUnfinishedDownloads = true
             };
 
-            if (_browser == null || _browser.IsClosed || _requireNewBrowserInstance)
+            // create a new browser if needed
+            var currentSessionBrowser = _browser;
+
+            if (RequireNewBrowserInstancePerSession)
             {
-                await NewBrowser();
+                currentSessionBrowser = await Puppeteer.LaunchAsync(_defaultBrowserLaunchOptions);
             }
-            
+            else
+            {
+                if (_browser == null || _browser.IsClosed || _requireNewBrowserInstance)
+                {
+                    await NewBrowser();
+                    currentSessionBrowser = _browser;
+                }
+            }
+
+            // create a new session
             Logger.Debug("Create incognito session");
-            var context = await _browser.CreateIncognitoBrowserContextAsync();
+            var context = await currentSessionBrowser.CreateIncognitoBrowserContextAsync();
             Logger.Debug("Create new tab");
             var page = await context.NewPageAsync();
             await page.SetViewportAsync(new ViewPortOptions
@@ -68,11 +83,13 @@ namespace ScreenShooter.Actuator
                 Width = WindowWidth,
                 Height = WindowHeight
             });
-            Logger.Debug($"Navigate to \"{url}\"");
+
+            // load document
+            Logger.Debug($"Navigate to \"{e.Url}\"");
             try
             {
                 await page.GoToAsync(
-                    url,
+                    e.Url,
                     PageDownloadTimeout,
                     new[] {WaitUntilNavigation.Networkidle0}
                 );
@@ -80,20 +97,21 @@ namespace ScreenShooter.Actuator
             catch (WaitTaskTimeoutException)
             {
                 // TODO: time exceeded
-                Logger.Warn($"Page loading time exceeded for url \"{url}\"");
+                Logger.Warn($"Page loading time exceeded for url \"{e.Url}\"");
                 ret.HasPotentialUnfinishedDownloads = false;
             }
             catch (NavigationException)
             {
-                Logger.Warn($"Document download time exceeded for url \"{url}\"");
+                Logger.Warn($"Document download time exceeded for url \"{e.Url}\"");
                 ret.HasPotentialUnfinishedDownloads = false;
             }
 
             ret.Url = page.Url;
             ret.Title = await page.GetTitleAsync();
             var prefix =
-                Path.Escape(ret.Title.Substring(0, Math.Min(MaxTitlePrependLength, ret.Title.Length)) + "-" + sessionId);
+                Path.Escape(ret.Title.Substring(0, Math.Min(MaxTitlePrependLength, ret.Title.Length)) + "-" + e.Id);
 
+            // scroll through the page to load any lazy-loading elements
             Logger.Debug("Trying to load lazy-loading elements");
             try
             {
@@ -119,63 +137,66 @@ namespace ScreenShooter.Actuator
             {
                 // body cannot be downloaded
                 Logger.Error("Body is missing, either your URL contains a redirection or there is a network issue");
-                return new ExecutionResult()
-                {
-                    Identifier = sessionId,
-                    StatusText = "Failed to download web page",
-                    HasPotentialUnfinishedDownloads = true,
-                };
+                ret.StatusText += "Failed to download web page\n";
+                ret.HasPotentialUnfinishedDownloads = true;
+                return ret;
             }
 
             var attachments = new List<string>();
-            // screen shot
-            try
-            {
-                Logger.Debug("Saving PDF");
-                await page.PdfAsync($"{prefix}.pdf", new PdfOptions()
+
+            if (e.RequestTypes.Contains(UserRequestType.Pdf))
+            { // capture PDF
+                try
                 {
-                    // TODO: header and footer is not in the correct position, ignore for now
-                    // HeaderTemplate = "<title /> - <date />",
-                    // FooterTemplate =
-                    //    "<url /> - Captured by ScreenShooter - https://github.com/Jamesits/ScreenShooter - <pageNumber />/<totalPages />",
-                    DisplayHeaderFooter = true,
-                    PrintBackground = true,
-                    Format = PaperFormat.A4,
-                    MarginOptions = new MarginOptions()
+                    Logger.Debug("Saving PDF");
+                    await page.PdfAsync($"{prefix}.pdf", new PdfOptions()
                     {
-                        Bottom = "0.5in",
-                        Top = "0.5in",
-                        Left = "0.3in",
-                        Right = "0.3in",
-                    },
-                });
-                attachments.Add($"{prefix}.pdf");
-            }
-            catch (TargetClosedException e)
-            {
-                // possibility out of memory, see https://github.com/Jamesits/ScreenShooter/issues/1
-                ret.StatusText += "Possible out of memory when requesting PDF\n";
-                Logger.Error($"Something happened on requesting PDF. \n\nException:\n{e}\n\nInnerException:{e?.InnerException}");
-                _requireNewBrowserInstance = true;
-            }
-
-            try
-            {
-                Logger.Debug("Taking screenshot");
-                await page.ScreenshotAsync($"{prefix}.png", new ScreenshotOptions
+                        // TODO: header and footer is not in the correct position, ignore for now
+                        // HeaderTemplate = "<title /> - <date />",
+                        // FooterTemplate =
+                        //    "<url /> - Captured by ScreenShooter - https://github.com/Jamesits/ScreenShooter - <pageNumber />/<totalPages />",
+                        DisplayHeaderFooter = true,
+                        PrintBackground = true,
+                        Format = PaperFormat.A4,
+                        MarginOptions = new MarginOptions()
+                        {
+                            Bottom = "0.5in",
+                            Top = "0.5in",
+                            Left = "0.3in",
+                            Right = "0.3in",
+                        },
+                    });
+                    attachments.Add($"{prefix}.pdf");
+                }
+                catch (TargetClosedException ex)
                 {
-                    FullPage = true
-                });
-                attachments.Add($"{prefix}.png");
-            }
-            catch (TargetClosedException e)
-            {
-                // possibility out of memory, see https://github.com/Jamesits/ScreenShooter/issues/1
-                ret.StatusText += "Possible out of memory when requesting screenshot\n";
-                Logger.Error($"Something happened on requesting screenshot. \n\nException:\n{e}\n\nInnerException:{e?.InnerException}");
-                _requireNewBrowserInstance = true;
+                    // possibility out of memory, see https://github.com/Jamesits/ScreenShooter/issues/1
+                    ret.StatusText += "Possible out of memory when requesting PDF\n";
+                    Logger.Error($"Something happened on requesting PDF. \n\nException:\n{ex}\n\nInnerException:{ex?.InnerException}");
+                    _requireNewBrowserInstance = true;
+                }
             }
 
+            if (e.RequestTypes.Contains(UserRequestType.Png))
+            { // capture screenshot
+                try
+                {
+                    Logger.Debug("Taking screenshot");
+                    await page.ScreenshotAsync($"{prefix}.png", new ScreenshotOptions
+                    {
+                        FullPage = true
+                    });
+                    attachments.Add($"{prefix}.png");
+                }
+                catch (TargetClosedException ex)
+                {
+                    // possibility out of memory, see https://github.com/Jamesits/ScreenShooter/issues/1
+                    ret.StatusText += "Possible out of memory when requesting screenshot\n";
+                    Logger.Error($"Something happened on requesting screenshot. \n\nException:\n{ex}\n\nInnerException:{ex?.InnerException}");
+                    _requireNewBrowserInstance = true;
+                }
+            }
+            
             ret.Attachments = attachments.ToArray();
 
             // clean up
@@ -185,10 +206,15 @@ namespace ScreenShooter.Actuator
                 await page.CloseAsync();
                 Logger.Debug("Kill context");
                 await context.CloseAsync();
+                if (RequireNewBrowserInstancePerSession)
+                {
+                    Logger.Debug("Closing browser");
+                    await currentSessionBrowser.CloseAsync();
+                }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Logger.Error($"Something happened on cleaning up. \n\nException:\n{e}\n\nInnerException:{e?.InnerException}");
+                Logger.Error($"Something happened on cleaning up. \n\nException:\n{ex}\n\nInnerException:{ex?.InnerException}");
             }
 
             Logger.Debug("Exit CapturePage()");
@@ -203,7 +229,7 @@ namespace ScreenShooter.Actuator
             _browser = null;
         }
 
-        private void DownloadBrowser()
+        private static void DownloadBrowser()
         {
             var browserFetcher = new BrowserFetcher();
             browserFetcher.DownloadProgressChanged += (sender, e) =>

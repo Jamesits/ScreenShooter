@@ -4,25 +4,25 @@ using System.Text;
 
 namespace ScreenShooter.Helper
 {
-    public class RuntimeInformation
+    public static class RuntimeInformation
     {
-        private readonly Process _self = Process.GetCurrentProcess();
-        public TimeSpan TotalProcessorTime => _self.TotalProcessorTime;
-        public TimeSpan SystemProcessorTime => _self.PrivilegedProcessorTime;
-        public TimeSpan UserProcessorTime => _self.UserProcessorTime;
-        public long WorkingSet => _self.WorkingSet64;
-        public long PeakWorkingSet => _self.PeakWorkingSet64;
+        private static Process _self = Process.GetCurrentProcess();
+        public static TimeSpan TotalProcessorTime => _self.TotalProcessorTime;
+        public static TimeSpan SystemProcessorTime => _self.PrivilegedProcessorTime;
+        public static TimeSpan UserProcessorTime => _self.UserProcessorTime;
+        public static long WorkingSet => _self.WorkingSet64;
+        public static long PeakWorkingSet => _self.PeakWorkingSet64;
 
-        public string Os => System.Runtime.InteropServices.RuntimeInformation.OSDescription;
-        public string Framework => System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
-        public string Hostname => System.Environment.MachineName;
-        public string Username => System.Environment.UserDomainName;
+        public static string Os => System.Runtime.InteropServices.RuntimeInformation.OSDescription;
+        public static string Framework => System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
+        public static string Hostname => System.Environment.MachineName;
+        public static string Username => System.Environment.UserDomainName;
 
         public static ulong OnGoingRequests { get; set; } = 0;
         public static ulong FinishedRequests { get; set; } = 0;
         public static ulong FailedRequests { get; set; } = 0;
 
-        public override string ToString()
+        public new static string ToString()
         {
             var sb = new StringBuilder();
 

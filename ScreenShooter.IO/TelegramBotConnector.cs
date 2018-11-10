@@ -1,9 +1,12 @@
 ﻿using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
 using System.Threading.Tasks;
 using NLog;
 using ScreenShooter.Actuator;
+using ScreenShooter.Helper;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
@@ -11,14 +14,11 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
 using File = System.IO.File;
+using Path = System.IO.Path;
 
 namespace ScreenShooter.IO
 {
-    public class TelegramMessageEventArgs : NewRequestEventArgs
-    {
-        public Message OriginMessage { get; set; }
-    }
-
+    // ReSharper disable once UnusedMember.Global
     internal class TelegramBotConnector : IConnector
     {
         private static TelegramBotClient _bot;
@@ -27,7 +27,7 @@ namespace ScreenShooter.IO
         public string ApiKey { get; set; }
         public uint MaxUploadRetries { get; set; } = 3;
 
-        public event EventHandler NewRequest;
+        public event UserRequestEventHandler NewRequest;
 
         public async Task CreateSession()
         {
@@ -46,23 +46,23 @@ namespace ScreenShooter.IO
             while (!_onQuit) await Task.Delay(1000);
         }
 
-        public async Task SendResult(ExecutionResult result, NewRequestEventArgs e)
+        public async Task SendResult(object sender, CaptureResponseEventArgs e)
         {
-            if (result == null)
+            if (e == null)
             {
                 Logger.Warn("result is null, ignoring");
                 return;
             }
 
-            var ex = e as TelegramMessageEventArgs;
-            if (ex == null)
+            var message = e.Request.RequestContext as Message;
+            if (message == null)
             {
-                Logger.Warn("e is not a TelegramMessageEventArgs object, ignoring");
+                Logger.Error("Returned RequestContext is not a valid Telegram UserRequest object");
                 return;
             }
 
-            if (result.Attachments != null)
-            foreach (var filePath in result.Attachments)
+            if (e.Attachments != null)
+            foreach (var filePath in e.Attachments)
                 using (var fs = File.OpenRead(filePath))
                 {
                     var trial = 0;
@@ -74,8 +74,8 @@ namespace ScreenShooter.IO
                         {
                             Logger.Debug($"(retry {trial}/{MaxUploadRetries}) Uploading file \"{fileName}\"");
                             var inputOnlineFile = new InputOnlineFile(fs, fileName);
-                            await _bot.SendDocumentAsync(ex.OriginMessage.Chat, inputOnlineFile,
-                                replyToMessageId: ex.OriginMessage.MessageId);
+                            await _bot.SendDocumentAsync(message.Chat, inputOnlineFile,
+                                replyToMessageId: message.MessageId);
                             succeed = true;
                         }
                         catch (ApiRequestException)
@@ -88,15 +88,15 @@ namespace ScreenShooter.IO
                     if (!succeed)
                     {
                         Logger.Error("Unable to upload file \"{fileName}\"");
-                        result.StatusText += "Unable to upload file \"{fileName}\".\n";
+                        e.StatusText += "Unable to upload file \"{fileName}\".\n";
                     }
                 }
 
             Logger.Debug("Sending session information");
             await _bot.SendTextMessageAsync(
-                ex.OriginMessage.Chat,
-                $"<pre>{result}</pre>",
-                replyToMessageId: ex.OriginMessage.MessageId,
+                message.Chat,
+                $"<pre>{e}</pre>",
+                replyToMessageId: message.MessageId,
                 parseMode: ParseMode.Html
             );
         }
@@ -137,18 +137,14 @@ namespace ScreenShooter.IO
                             replyToMessageId: message.MessageId);
                         break;
                     case "/DiagnosticInfo":
-                        await _bot.SendTextMessageAsync(message.Chat,
-                            new Helper.RuntimeInformation().ToString(),
-                            replyToMessageId: message.MessageId);
+                        await _bot.SendTextMessageAsync(message.Chat, RuntimeInformation.ToString(), replyToMessageId: message.MessageId);
                         break;
                     case "/ForceGarbageCollection":
-                        await _bot.SendTextMessageAsync(message.Chat,
-                            new Helper.RuntimeInformation().ToString(),
-                            replyToMessageId: message.MessageId);
+                        var sb = new StringBuilder();
+                        sb.AppendLine($"Before GC: {RuntimeInformation.WorkingSet}Bytes");
                         GC.Collect(2, GCCollectionMode.Optimized, true, true);
-                        await _bot.SendTextMessageAsync(message.Chat,
-                            new Helper.RuntimeInformation().ToString(),
-                            replyToMessageId: message.MessageId);
+                        sb.AppendLine($"After GC: {RuntimeInformation.WorkingSet}Bytes");
+                        await _bot.SendTextMessageAsync(message.Chat, sb.ToString(), replyToMessageId: message.MessageId);
                         break;
                     default:
                         await _bot.SendTextMessageAsync(message.Chat, "Unknown command. \n\n/help - get help",
@@ -173,10 +169,11 @@ namespace ScreenShooter.IO
                     // is a valid URL
                     await _bot.SendTextMessageAsync(message.Chat, "Added to queue, please wait",
                         replyToMessageId: message.MessageId);
-                    NewRequest?.Invoke(this, new TelegramMessageEventArgs
+                    NewRequest?.Invoke(this, new UserRequestEventArgs()
                     {
-                        OriginMessage = message,
                         Url = uriResult.AbsoluteUri,
+                        RequestContext = message,
+                        RequestTypes = new List<UserRequestType>{UserRequestType.Pdf, UserRequestType.Png},
                     });
 
                 }

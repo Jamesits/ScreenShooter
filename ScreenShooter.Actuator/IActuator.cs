@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
+using ScreenShooter.Helper;
 
 namespace ScreenShooter.Actuator
 {
     public interface IActuator
     {
-        Task<ExecutionResult> CapturePage(string url, Guid sessionId);
+        Task<CaptureResponseEventArgs> CapturePage(object sender, UserRequestEventArgs e);
     }
 }

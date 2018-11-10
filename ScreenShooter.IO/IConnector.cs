@@ -1,20 +1,16 @@
 ﻿using System;
 using System.Threading.Tasks;
 using ScreenShooter.Actuator;
+using ScreenShooter.Helper;
 
 namespace ScreenShooter.IO
 {
     public interface IConnector
     {
-        event EventHandler NewRequest;
+        event UserRequestEventHandler NewRequest;
         Task CreateSession();
         Task EventLoop();
-        Task SendResult(ExecutionResult result, NewRequestEventArgs originRequestEventArgs);
+        Task SendResult(object sender, CaptureResponseEventArgs e);
         Task DestroySession();
-    }
-
-    public class NewRequestEventArgs : EventArgs
-    {
-        public string Url { get; set; }
     }
 }
