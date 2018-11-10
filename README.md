@@ -9,7 +9,7 @@ An automatic web page screenshot service.
 
 [![Build Status](https://dev.azure.com/nekomimiswitch/General/_apis/build/status/ScreenShooter)](https://dev.azure.com/nekomimiswitch/General/_build/latest?definitionId=26)
 
-Demo services are not guaranteed to work - then run the latest code from master branch. Feel free to play with them, but don't take up too much resources.
+Demo services are not guaranteed to work - they run the latest code from the master branch. Feel free to play with them, but don't take up too much resources.
 
 * Telegram bot demo: [@ScreenShooterDemoBot](https://t.me/ScreenShooterDemoBot)
 
