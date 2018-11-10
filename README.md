@@ -61,6 +61,7 @@ MaxTitlePrependLength=32
 [[Connector.TelegramBotConnector]]
 ApiKey="your-api-key"
 MaxUploadRetries=3
+Administrators = [ userid1, userid2, ... ]
 ```
 
 Note that you can write multiple `[[Connector.x]]` to get multiple different instances of them.
