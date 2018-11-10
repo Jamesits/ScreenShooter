@@ -1,11 +1,17 @@
 # ScreenShooter
 
-[![Build Status](https://dev.azure.com/nekomimiswitch/General/_apis/build/status/ScreenShooter)](https://dev.azure.com/nekomimiswitch/General/_build/latest?definitionId=26)
-
-An automatic screenshot service.
+An automatic web page screenshot service.
 
 > Some links are alive, but they have already died;<br>
 > Some links have died, but they are still alive.
+
+## CI and Demo
+
+[![Build Status](https://dev.azure.com/nekomimiswitch/General/_apis/build/status/ScreenShooter)](https://dev.azure.com/nekomimiswitch/General/_build/latest?definitionId=26)
+
+Demo services are not guaranteed to work - then run the latest code from master branch. Feel free to play with them, but don't take up too much resources.
+
+* Telegram bot demo: [@ScreenShooterDemoBot](https://t.me/ScreenShooterDemoBot)
 
 ## Features
 
