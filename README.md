@@ -40,6 +40,7 @@ Config file example:
 AggressiveGc=true
 # Pre-allocate n*2 bytes for other programs (Chromium!) running on the same machine
 LowMemoryAddMemoryPressure=0
+ParallelJobs=1
 
 [Actuator]
 [[Actuator.HeadlessChromeActuator]]
@@ -47,6 +48,8 @@ WindowWidth=1920
 WindowHeight=1080
 # Wait on initial page load
 PageDownloadTimeout=30000
+# Wait after page load
+DocumentLoadDelay=500
 # Wait on every scroll event
 PageScrollActionWaitDelay=2000
 # Wait after scroll (for lazy loaded images to load)
