@@ -141,6 +141,15 @@ namespace ScreenShooter.IO
                             new Helper.RuntimeInformation().ToString(),
                             replyToMessageId: message.MessageId);
                         break;
+                    case "/ForceGarbageCollection":
+                        await _bot.SendTextMessageAsync(message.Chat,
+                            new Helper.RuntimeInformation().ToString(),
+                            replyToMessageId: message.MessageId);
+                        GC.Collect(2, GCCollectionMode.Optimized, true, true);
+                        await _bot.SendTextMessageAsync(message.Chat,
+                            new Helper.RuntimeInformation().ToString(),
+                            replyToMessageId: message.MessageId);
+                        break;
                     default:
                         await _bot.SendTextMessageAsync(message.Chat, "Unknown command. \n\n/help - get help",
                             replyToMessageId: message.MessageId);
