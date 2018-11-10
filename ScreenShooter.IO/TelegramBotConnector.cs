@@ -42,7 +42,7 @@ namespace ScreenShooter.IO
             {
                 await _bot.SendTextMessageAsync(
                     administrator,
-                    $"{Globals.ProgramIdentifier}\n\nBot has been restarted."
+                    $"{Globals.ProgramIdentifier}\n\nBot has been started."
                 );
             }
         }
@@ -110,6 +110,14 @@ namespace ScreenShooter.IO
 
         public async Task DestroySession()
         {
+            foreach (var administrator in Administrators)
+            {
+                await _bot.SendTextMessageAsync(
+                    administrator,
+                    $"{Globals.ProgramIdentifier}\n\nBot is shutting down."
+                );
+            }
+
             _onQuit = true;
             await Task.Run(() => _bot.StopReceiving());
         }
