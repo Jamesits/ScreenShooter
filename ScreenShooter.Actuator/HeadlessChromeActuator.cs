@@ -35,6 +35,7 @@ namespace ScreenShooter.Actuator
         public int WindowWidth { get; set; } = 1920;
         public int WindowHeight { get; set; } = 1080;
         public int PageDownloadTimeout { get; set; } = 30000;
+        public int DocumentLoadDelay { get; set; } = 500;
         public int PageScrollActionWaitDelay { get; set; } = 2000;
         public int ExtraDownloadWaitDelay { get; set; } = 10000;
         public int MaxTitlePrependLength { get; set; } = 32;
@@ -105,6 +106,8 @@ namespace ScreenShooter.Actuator
                 Logger.Warn($"Document download time exceeded for url \"{e.Url}\"");
                 ret.HasPotentialUnfinishedDownloads = false;
             }
+
+            await page.WaitForTimeoutAsync(DocumentLoadDelay);
 
             ret.Url = page.Url;
             ret.Title = await page.GetTitleAsync();

@@ -26,6 +26,7 @@ namespace ScreenShooter.IO
         private bool _onQuit;
         public string ApiKey { get; set; }
         public uint MaxUploadRetries { get; set; } = 3;
+        public List<long> Administrators { get; set; } = new List<long>();
 
         public event UserRequestEventHandler NewRequest;
 
@@ -125,6 +126,7 @@ namespace ScreenShooter.IO
             }
 
             Logger.Debug($"Received message from @{message.From.Username}: {message.Text}");
+            
             if (message.Text.StartsWith('/'))
             {
                 // is a command
@@ -137,12 +139,15 @@ namespace ScreenShooter.IO
                             replyToMessageId: message.MessageId);
                         break;
                     case "/UserInfo":
+                        if (!Administrators.Contains(message.Chat.Id)) goto default;
                         await _bot.SendTextMessageAsync(message.Chat, $"User ID: {message.Chat.Id}", replyToMessageId: message.MessageId);
                         break;
                     case "/DiagnosticInfo":
+                        if (!Administrators.Contains(message.Chat.Id)) goto default;
                         await _bot.SendTextMessageAsync(message.Chat, RuntimeInformation.ToString(), replyToMessageId: message.MessageId);
                         break;
                     case "/ForceGarbageCollection":
+                        if (!Administrators.Contains(message.Chat.Id)) goto default;
                         var sb = new StringBuilder();
                         sb.AppendLine($"Before GC: {RuntimeInformation.WorkingSet}Bytes");
                         GC.Collect(2, GCCollectionMode.Optimized, true, true);
