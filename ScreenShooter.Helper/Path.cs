@@ -1,10 +1,13 @@
 ﻿using System.Linq;
 using System.Text;
+using NLog;
 
 namespace ScreenShooter.Helper
 {
     public static class Path
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         public static readonly char[] InvalidFileChars = System.IO.Path.GetInvalidFileNameChars();
         public static readonly char[] FilteredChars = {'/', '\\', ',', ':', '"', '\''};
         public static string Escape(string s)
@@ -21,6 +24,7 @@ namespace ScreenShooter.Helper
                     sb.Append('_');
                 }
             }
+            Logger.Trace($"Escaped filename {s} into {sb}");
             return sb.ToString();
         }
     }

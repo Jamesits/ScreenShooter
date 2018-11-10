@@ -61,6 +61,7 @@ namespace ScreenShooter
                 // set up GC
                 if (Globals.GlobalConfig.LowMemoryAddMemoryPressure > 0)
                 {
+                    // Ask @hjc4869 why there is a *2
                     Logger.Debug($"Adding memory pressure {Globals.GlobalConfig.LowMemoryAddMemoryPressure * 2 / 1048576}MiB");
                     GC.AddMemoryPressure(Globals.GlobalConfig.LowMemoryAddMemoryPressure * 2);
                 }
