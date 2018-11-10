@@ -29,12 +29,13 @@ Messenging Connector:
 
 * Minimal free memory 512MiB (Chrome eats memory, you know)
 * dotnet core 2.1
+* Manually install [all dependencies of a chromium](https://github.com/Jamesits/ScreenShooter/wiki/Deploy-Example#chrome-runtime)
 
-On machine with <4GiB memory, please set `LowMemoryMode=true` and use a >2GiB swap.
+On machine with <4GiB memory, please set `LowMemoryMode=true`, a smaller `ParallelJobs` and use a >2GiB swap.
 
 ### Deployment
 
-A complete example of deployment can be found at [wiki/Deploy-Example](wiki/Deploy-Example)
+A complete example of deployment can be found at [wiki/Deploy-Example](https://github.com/Jamesits/ScreenShooter/wiki/Deploy-Example)
 
 Launch: `dotnet ScreenShooter.dll --config path/to/your/config.toml`
 
