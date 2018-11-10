@@ -181,7 +181,7 @@ namespace ScreenShooter.IO
                     )
                 {
                     // is a valid URL
-                    await _bot.SendTextMessageAsync(message.Chat, $"Job added to queue, please wait. \nRunning: {RuntimeInformation.OnGoingRequests}\nCurrent in queue: {RuntimeInformation.QueuedRequests}\nMax parallel jobs: {Globals.GlobalConfig.ParallelJobs}",
+                    await _bot.SendTextMessageAsync(message.Chat, $"Job enqueued. Sit back and relax - this is going to take minutes. \nRunning: {RuntimeInformation.OnGoingRequests}\nWaiting: {RuntimeInformation.QueuedRequests}\nMax parallel jobs: {Globals.GlobalConfig.ParallelJobs}",
                         replyToMessageId: message.MessageId);
                     NewRequest?.Invoke(this, new UserRequestEventArgs()
                     {
