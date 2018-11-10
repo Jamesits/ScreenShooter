@@ -1,6 +1,6 @@
-﻿using NLog;
+﻿using System.Threading.Tasks;
+using NLog;
 using ScreenShooter.Helper;
-using System.Threading.Tasks;
 
 namespace ScreenShooter.IO
 {
@@ -15,17 +15,15 @@ namespace ScreenShooter.IO
         public async Task CreateSession()
 
         {
-            return;
         }
 
         public async Task EventLoop()
         {
-            return;
         }
 
         public async Task SendResult(object sender, CaptureResponseEventArgs e)
         {
-            Logger.Info($"Request finished.");
+            Logger.Info("Request finished.");
             if (e.Attachments != null)
             {
                 foreach (var item in e.Attachments)
@@ -37,7 +35,6 @@ namespace ScreenShooter.IO
 
         public async Task DestroySession()
         {
-            return;
         }
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
     }

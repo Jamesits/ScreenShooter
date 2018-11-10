@@ -1,5 +1,5 @@
-﻿using ScreenShooter.Helper;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using ScreenShooter.Helper;
 
 namespace ScreenShooter.Actuator
 {

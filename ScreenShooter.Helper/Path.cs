@@ -1,6 +1,6 @@
-﻿using NLog;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
+using NLog;
 
 namespace ScreenShooter.Helper
 {

@@ -1,10 +1,10 @@
-﻿using NLog;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using NLog;
 using PuppeteerSharp;
 using PuppeteerSharp.Media;
 using ScreenShooter.Helper;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace ScreenShooter.Actuator
 {
@@ -19,7 +19,7 @@ namespace ScreenShooter.Actuator
         private readonly LaunchOptions _defaultBrowserLaunchOptions = new LaunchOptions
         {
             Headless = true,
-            DumpIO = true,
+            DumpIO = true
         };
 
         public HeadlessChromeActuator()
@@ -152,7 +152,7 @@ namespace ScreenShooter.Actuator
                 try
                 {
                     Logger.Debug("Saving PDF");
-                    await page.PdfAsync($"{prefix}.pdf", new PdfOptions()
+                    await page.PdfAsync($"{prefix}.pdf", new PdfOptions
                     {
                         // TODO: header and footer is not in the correct position, ignore for now
                         // HeaderTemplate = "<title /> - <date />",
@@ -161,13 +161,13 @@ namespace ScreenShooter.Actuator
                         DisplayHeaderFooter = true,
                         PrintBackground = true,
                         Format = PaperFormat.A4,
-                        MarginOptions = new MarginOptions()
+                        MarginOptions = new MarginOptions
                         {
                             Bottom = "0.5in",
                             Top = "0.5in",
                             Left = "0.3in",
-                            Right = "0.3in",
-                        },
+                            Right = "0.3in"
+                        }
                     });
                     attachments.Add($"{prefix}.pdf");
                 }

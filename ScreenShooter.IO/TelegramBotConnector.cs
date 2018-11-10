@@ -1,10 +1,10 @@
-﻿using NLog;
-using ScreenShooter.Helper;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NLog;
+using ScreenShooter.Helper;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
@@ -183,12 +183,12 @@ namespace ScreenShooter.IO
                     // is a valid URL
                     await _bot.SendTextMessageAsync(message.Chat, $"Job enqueued. Sit back and relax - this is going to take minutes. \nRunning: {RuntimeInformation.OnGoingRequests}\nWaiting: {RuntimeInformation.QueuedRequests}\nMax parallel jobs: {Globals.GlobalConfig.ParallelJobs}",
                         replyToMessageId: message.MessageId);
-                    NewRequest?.Invoke(this, new UserRequestEventArgs()
+                    NewRequest?.Invoke(this, new UserRequestEventArgs
                     {
                         Url = uriResult.AbsoluteUri,
                         RequestContext = message,
                         RequestTypes = new List<UserRequestType>{UserRequestType.Pdf, UserRequestType.Png},
-                        IsPriority = Administrators.Contains(message.Chat.Id),
+                        IsPriority = Administrators.Contains(message.Chat.Id)
                     });
 
                 }

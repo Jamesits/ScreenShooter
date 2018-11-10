@@ -1,14 +1,15 @@
-﻿using McMaster.Extensions.CommandLineUtils;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using McMaster.Extensions.CommandLineUtils;
 using Nett;
 using NLog;
 using ScreenShooter.Actuator;
 using ScreenShooter.Helper;
 using ScreenShooter.IO;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ScreenShooter
 {
@@ -23,7 +24,7 @@ namespace ScreenShooter
         private readonly List<IConnector> _connectors = new List<IConnector>();
         private readonly List<Task> _connectorTasks = new List<Task>();
         private readonly List<Task> _queueTasks = new List<Task>();
-        private readonly Helper.Queue<Helper.UserRequestEventArgs> _requestQueue = new Helper.Queue<Helper.UserRequestEventArgs>();
+        private readonly Helper.Queue<UserRequestEventArgs> _requestQueue = new Helper.Queue<UserRequestEventArgs>();
         private TomlTable _config;
 
         private bool _hasEnteredCleanUpRoutine;
@@ -123,10 +124,10 @@ namespace ScreenShooter
             {
                 #region enter one-shot mode
                 Logger.Debug("Entering one-shot mode");
-                var request = new UserRequestEventArgs()
+                var request = new UserRequestEventArgs
                 {
                     Url = Address,
-                    Requester = new NullConnector(),
+                    Requester = new NullConnector()
                 };
                 var actuator = new HeadlessChromeActuator();
                 Logger.Debug("Capturing page");
@@ -249,11 +250,11 @@ namespace ScreenShooter
             catch (Exception exception)
             { // if failed, we make a result ourselves
                 CurrentDomainUnhandledException(this, new UnhandledExceptionEventArgs(exception, false));
-                await requester.SendResult(this, new CaptureResponseEventArgs()
+                await requester.SendResult(this, new CaptureResponseEventArgs
                 {
                     Request = currentRequest,
                     HasPotentialUnfinishedDownloads = true,
-                    StatusText = $"Something happened. \nException: {exception}",
+                    StatusText = $"Something happened. \nException: {exception}"
                 });
 
                 RuntimeInformation.FailedRequests += 1;
@@ -266,7 +267,7 @@ namespace ScreenShooter
                     {
                         try
                         {
-                            System.IO.File.Delete(attachment);
+                            File.Delete(attachment);
                         }
                         catch (Exception e)
                         {

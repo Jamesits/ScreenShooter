@@ -6,7 +6,7 @@ namespace ScreenShooter.Helper
     public enum UserRequestType
     {
         Png,
-        Pdf,
+        Pdf
     }
 
     public class UserRequestEventArgs : EventArgs

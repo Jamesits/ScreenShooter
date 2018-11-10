@@ -15,8 +15,8 @@ namespace ScreenShooter.Helper
 
         public static string Os => System.Runtime.InteropServices.RuntimeInformation.OSDescription;
         public static string Framework => System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
-        public static string Hostname => System.Environment.MachineName;
-        public static string Username => System.Environment.UserDomainName;
+        public static string Hostname => Environment.MachineName;
+        public static string Username => Environment.UserDomainName;
 
         public static ulong QueuedRequests { get; set; } = 0;
         public static ulong OnGoingRequests { get; set; } = 0;
