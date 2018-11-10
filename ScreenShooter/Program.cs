@@ -187,6 +187,8 @@ namespace ScreenShooter
                 await Task.Run(() => { GC.Collect(); });
             }
 
+            RuntimeInformation.QueuedRequests += 1;
+
             // notify for new request
             ProcessRequests();
         }
@@ -224,6 +226,8 @@ namespace ScreenShooter
                 Logger.Error("Requester is not a IConnector");
                 return;
             }
+
+            RuntimeInformation.QueuedRequests -= 1;
             RuntimeInformation.OnGoingRequests += 1;
             Logger.Debug($"Processing request {currentRequest.Id}");
 

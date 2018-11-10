@@ -136,6 +136,9 @@ namespace ScreenShooter.IO
                             "Welcome!\nDrop a URL, get a PNG + PDF.\nDemo development bot, service not guaranteed.\nSet up yours at https://github.com/Jamesits/ScreenShooter",
                             replyToMessageId: message.MessageId);
                         break;
+                    case "/UserInfo":
+                        await _bot.SendTextMessageAsync(message.Chat, $"User ID: {message.Contact.UserId}", replyToMessageId: message.MessageId);
+                        break;
                     case "/DiagnosticInfo":
                         await _bot.SendTextMessageAsync(message.Chat, RuntimeInformation.ToString(), replyToMessageId: message.MessageId);
                         break;
@@ -167,7 +170,7 @@ namespace ScreenShooter.IO
                     )
                 {
                     // is a valid URL
-                    await _bot.SendTextMessageAsync(message.Chat, "Added to queue, please wait",
+                    await _bot.SendTextMessageAsync(message.Chat, $"Job added to queue, please wait. \nRunning: {RuntimeInformation.OnGoingRequests}\nCurrent in queue: {RuntimeInformation.QueuedRequests}\nMax parallel jobs: {Globals.GlobalConfig.ParallelJobs}",
                         replyToMessageId: message.MessageId);
                     NewRequest?.Invoke(this, new UserRequestEventArgs()
                     {

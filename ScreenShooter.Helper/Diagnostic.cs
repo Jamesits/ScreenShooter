@@ -18,6 +18,7 @@ namespace ScreenShooter.Helper
         public static string Hostname => System.Environment.MachineName;
         public static string Username => System.Environment.UserDomainName;
 
+        public static ulong QueuedRequests { get; set; } = 0;
         public static ulong OnGoingRequests { get; set; } = 0;
         public static ulong FinishedRequests { get; set; } = 0;
         public static ulong FailedRequests { get; set; } = 0;
@@ -39,7 +40,7 @@ namespace ScreenShooter.Helper
             sb.AppendFormat("user {0}s\n", UserProcessorTime);
             sb.AppendFormat("sys {0}s\n", SystemProcessorTime);
 
-            sb.AppendFormat("Session requests: r{0} | s{0} | f{0}\n", OnGoingRequests, FinishedRequests, FailedRequests);
+            sb.AppendFormat("Session requests: q{0} | r{1} | s{2} | f{3}\n", QueuedRequests, OnGoingRequests, FinishedRequests, FailedRequests);
 
             return sb.ToString();
         }
