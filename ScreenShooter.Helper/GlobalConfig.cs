@@ -5,5 +5,6 @@
         public bool AggressiveGc { get; set; } = false;
         public long LowMemoryAddMemoryPressure { get; set; } = 0;
         public int ParallelJobs { get; set; } = 1;
+        public bool RemoveLocalFile { get; set; } = true;
     }
 }

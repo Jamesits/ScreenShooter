@@ -235,10 +235,11 @@ namespace ScreenShooter
             // TODO: verify if actuator has sufficient capability
             var r = Rnd.Next(_actuators.Count);
             var a = _actuators[r];
+            CaptureResponseEventArgs ret = null;
 
             try
             { // try get a result from actuator
-                var ret = await a.CapturePage(this, currentRequest);
+                ret = await a.CapturePage(this, currentRequest);
                 Logger.Info(ret);
 
                 Logger.Debug("Sending result");
@@ -259,6 +260,20 @@ namespace ScreenShooter
             }
             finally
             {
+                if (Globals.GlobalConfig.RemoveLocalFile && ret != null)
+                {
+                    foreach (var attachment in ret.Attachments)
+                    {
+                        try
+                        {
+                            System.IO.File.Delete(attachment);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Error($"Cannot delete file {attachment}, Exception: \n{e}");
+                        }
+                    }
+                }
                 RuntimeInformation.OnGoingRequests -= 1;
                 Logger.Debug($"Finished request {currentRequest.Id}");
             }

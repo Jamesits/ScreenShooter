@@ -41,6 +41,8 @@ AggressiveGc=true
 # Pre-allocate n*2 bytes for other programs (Chromium!) running on the same machine
 LowMemoryAddMemoryPressure=0
 ParallelJobs=1
+# do not retain saved file on the server
+RemoveLocalFile=true
 
 [Actuator]
 [[Actuator.HeadlessChromeActuator]]
