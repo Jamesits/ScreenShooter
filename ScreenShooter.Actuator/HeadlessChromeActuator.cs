@@ -99,11 +99,13 @@ namespace ScreenShooter.Actuator
             {
                 // TODO: time exceeded
                 Logger.Warn($"Page loading time exceeded for url \"{e.Url}\"");
+                ret.StatusText += $"Page loading time exceeded for url \"{e.Url}\"\n";
                 ret.HasPotentialUnfinishedDownloads = false;
             }
             catch (NavigationException)
             {
                 Logger.Warn($"Document download time exceeded for url \"{e.Url}\"");
+                ret.StatusText += $"Document download time exceeded for url \"{e.Url}\"\n";
                 ret.HasPotentialUnfinishedDownloads = false;
             }
 
