@@ -10,6 +10,8 @@ namespace ScreenShooter.Actuator
 {
     public class HeadlessChromeActuator : IActuator
     {
+        UserRequestType[] IActuator.Capability => new [] { UserRequestType.Pdf, UserRequestType.Png };
+        
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private Browser _browser;
 
@@ -22,9 +24,8 @@ namespace ScreenShooter.Actuator
             DumpIO = true
         };
 
-        public HeadlessChromeActuator()
+        public HeadlessChromeActuator() : this(true)
         {
-            DownloadBrowser();
         }
 
         public HeadlessChromeActuator(bool autoDownload)
@@ -177,7 +178,7 @@ namespace ScreenShooter.Actuator
                 {
                     // possibility out of memory, see https://github.com/Jamesits/ScreenShooter/issues/1
                     ret.StatusText += "Possible out of memory when requesting PDF\n";
-                    Logger.Error($"Something happened on requesting PDF. \n\nException:\n{ex}\n\nInnerException:{ex?.InnerException}");
+                    Logger.Error($"Something happened on requesting PDF. \n\nException:\n{ex}\n\nInnerException:{ex.InnerException}");
                     _requireNewBrowserInstance = true;
                 }
             }
@@ -197,7 +198,7 @@ namespace ScreenShooter.Actuator
                 {
                     // possibility out of memory, see https://github.com/Jamesits/ScreenShooter/issues/1
                     ret.StatusText += "Possible out of memory when requesting screenshot\n";
-                    Logger.Error($"Something happened on requesting screenshot. \n\nException:\n{ex}\n\nInnerException:{ex?.InnerException}");
+                    Logger.Error($"Something happened on requesting screenshot. \n\nException:\n{ex}\n\nInnerException:{ex.InnerException}");
                     _requireNewBrowserInstance = true;
                 }
             }
@@ -219,7 +220,7 @@ namespace ScreenShooter.Actuator
             }
             catch (Exception ex)
             {
-                Logger.Error($"Something happened on cleaning up. \n\nException:\n{ex}\n\nInnerException:{ex?.InnerException}");
+                Logger.Error($"Something happened on cleaning up. \n\nException:\n{ex}\n\nInnerException:{ex.InnerException}");
             }
 
             Logger.Debug("Exit CapturePage()");

@@ -49,7 +49,7 @@ namespace ScreenShooter.IO
 
         public async Task EventLoop()
         {
-            _bot.StartReceiving(Array.Empty<UpdateType>());
+            _bot.StartReceiving(System.Array.Empty<UpdateType>());
             while (!_onQuit) await Task.Delay(1000);
         }
 

@@ -5,6 +5,7 @@ namespace ScreenShooter.Actuator
 {
     public interface IActuator
     {
+        UserRequestType[] Capability { get; }
         Task<CaptureResponseEventArgs> CapturePage(object sender, UserRequestEventArgs e);
     }
 }

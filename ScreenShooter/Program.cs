@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -232,10 +233,27 @@ namespace ScreenShooter
             RuntimeInformation.OnGoingRequests += 1;
             Logger.Debug($"Processing request {currentRequest.Id}");
 
+            // get all actuators with specific capability
+            // TODO: what if a request needs 2 actuators w/ different capabilities to fulfill?
+            var availableActuators =
+                _actuators.Where(x => x.Capability.IsSubsetOf(currentRequest.RequestTypes)).ToArray();
+            if (availableActuators.Length <= 0)
+            {
+                Logger.Error("No actuator matches user request");
+                await requester.SendResult(this, new CaptureResponseEventArgs
+                {
+                    Request = currentRequest,
+                    HasPotentialUnfinishedDownloads = true,
+                    StatusText = $"Sorry, no actuators can fulfill your request."
+                });
+
+                RuntimeInformation.FailedRequests += 1;
+                return;
+            }
+
             // randomly select a actuator
-            // TODO: verify if actuator has sufficient capability
-            var r = Rnd.Next(_actuators.Count);
-            var a = _actuators[r];
+            var r = Rnd.Next(availableActuators.Length);
+            var a = availableActuators[r];
             CaptureResponseEventArgs ret = null;
 
             try
