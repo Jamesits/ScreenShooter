@@ -195,18 +195,40 @@ namespace ScreenShooter.IO
                         return;
                 }
 
-                // check if is valid url
+                // check if there is any valid url
 
-                var result = Url.ExtractValidUrls(content);
+                var result = Url.ExtractValidUrls(content).ToList();
 
-                if (result.Length > 0)
+                // also try if we can extract URLs from entities
+                foreach (var e in message.Entities)
+                {
+                    switch (e.Type)
+                    {
+                        case MessageEntityType.Url:
+                            Logger.Debug($"Entity type URL: {e.Url}");
+                            if (Url.IsValidUrl(e.Url)) result.Add(e.Url.Trim());
+                            break;
+                        case MessageEntityType.TextLink:
+                            // This is equal to <a> tag in HTML
+                            Logger.Debug($"Entity type TextURL: {e.Url}");
+                            if (Url.IsValidUrl(e.Url)) result.Add(e.Url.Trim());
+                            break;
+                    }
+                }
+
+                // remove duplication
+                result = result.Distinct().ToList();
+
+                // TODO: if returned multiple URLs?
+
+                if (result.Count > 0)
                 {
                     // is a valid URL
                     await _bot.SendTextMessageAsync(message.Chat, $"Job enqueued. Sit back and relax - this is going to take minutes. \nRunning: {RuntimeInformation.OnGoingRequests}\nWaiting: {RuntimeInformation.QueuedRequests}\nMax parallel jobs: {Globals.GlobalConfig.ParallelJobs}",
                         replyToMessageId: message.MessageId);
                     NewRequest?.Invoke(this, new UserRequestEventArgs
                     {
-                        Url = result[0], // TODO: if returned multiple URLs?
+                        Url = result[0], 
                         RequestContext = message,
                         RequestTypes = new List<UserRequestType>{UserRequestType.Pdf, UserRequestType.Png},
                         IsPriority = Administrators.Contains(message.Chat.Id)
@@ -215,19 +237,7 @@ namespace ScreenShooter.IO
                 }
                 else
                 {
-                    // try if we can extract URLs from eneities
-                    foreach (var e in message.Entities)
-                    {
-                        switch (e.Type)
-                        {
-                            case MessageEntityType.Url:
-                                Logger.Debug($"Entity type URL: {e.Url}");
-                                break;
-                            case MessageEntityType.TextLink:
-                                Logger.Debug($"Entity type TextURL: {e.Url}");
-                                break;
-                        }
-                    }
+                    
                     // if is not valid URL
                     await _bot.SendTextMessageAsync(
                         message.Chat, 
