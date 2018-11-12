@@ -42,7 +42,7 @@ namespace ScreenShooter.IO
             {
                 await _bot.SendTextMessageAsync(
                     administrator,
-                    $"{Globals.ProgramIdentifier}\n\nBot has been started."
+                    $"Bot has been started. - {Globals.ProgramIdentifier}"
                 );
             }
         }
@@ -114,7 +114,7 @@ namespace ScreenShooter.IO
             {
                 await _bot.SendTextMessageAsync(
                     administrator,
-                    $"{Globals.ProgramIdentifier}\n\nBot is shutting down."
+                    $"Bot is shutting down. - {Globals.ProgramIdentifier}"
                 );
             }
 
