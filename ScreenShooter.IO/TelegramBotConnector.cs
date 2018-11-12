@@ -131,17 +131,9 @@ namespace ScreenShooter.IO
                 return;
             }
 
-            if (message.Type != MessageType.Text)
-            {
-                Logger.Debug($"Received unknown message from @{message.From.Username} type {message.Type}");
-                await _bot.SendTextMessageAsync(message.Chat, "Unacceptable content",
-                    replyToMessageId: message.MessageId);
-                return;
-            }
-
             Logger.Debug($"Received message from @{message.From.Username}: {message.Text}");
             
-            if (message.Text.StartsWith('/'))
+            if (message.Type != MessageType.Text && message.Text.StartsWith('/'))
             {
                 // is a command
                 switch (message.Text.Split(' ').First())
@@ -176,24 +168,45 @@ namespace ScreenShooter.IO
             }
             else
             {
+                // get text from message
+                // TODO: parse message entities too
+                var content = "";
+                switch (message.Type)
+                {
+                    case MessageType.Text:
+                        content = message.Text;
+                        break;
+                    case MessageType.Photo:
+                    case MessageType.Video:
+                    case MessageType.Audio:
+                    case MessageType.Document:
+                        content = message.Caption;
+                        break;
+                    default:
+                        content = null;
+                        break;
+                }
+
+                if (content == null)
+                {
+                    Logger.Debug($"Received unknown message from @{message.From.Username} type {message.Type}");
+                        await _bot.SendTextMessageAsync(message.Chat, "Unacceptable content",
+                            replyToMessageId: message.MessageId);
+                        return;
+                }
+
                 // check if is valid url
 
-                var result = Uri.TryCreate(message.Text, UriKind.Absolute, out var uriResult);
+                var result = Url.ExtractValidUrls(content);
 
-                if (result && (
-                                 uriResult.Scheme == Uri.UriSchemeHttp
-                                 || uriResult.Scheme == Uri.UriSchemeHttps
-                                 || uriResult.Scheme == Uri.UriSchemeFtp
-                             )
-                             && uriResult.IsLoopback == false
-                    )
+                if (result.Length > 0)
                 {
                     // is a valid URL
                     await _bot.SendTextMessageAsync(message.Chat, $"Job enqueued. Sit back and relax - this is going to take minutes. \nRunning: {RuntimeInformation.OnGoingRequests}\nWaiting: {RuntimeInformation.QueuedRequests}\nMax parallel jobs: {Globals.GlobalConfig.ParallelJobs}",
                         replyToMessageId: message.MessageId);
                     NewRequest?.Invoke(this, new UserRequestEventArgs
                     {
-                        Url = uriResult.AbsoluteUri,
+                        Url = result[0], // TODO: if returned multiple URLs?
                         RequestContext = message,
                         RequestTypes = new List<UserRequestType>{UserRequestType.Pdf, UserRequestType.Png},
                         IsPriority = Administrators.Contains(message.Chat.Id)
@@ -203,6 +216,7 @@ namespace ScreenShooter.IO
                 else
                 {
                     // if is not valid URL
+                    // try to extract URLs from it 
                     await _bot.SendTextMessageAsync(
                         message.Chat, 
                         "Sorry, this is not a valid URL",
