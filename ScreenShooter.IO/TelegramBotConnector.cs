@@ -133,7 +133,7 @@ namespace ScreenShooter.IO
 
             Logger.Debug($"Received message from @{message.From.Username}: {message.Text}");
             
-            if (message.Type != MessageType.Text && message.Text.StartsWith('/'))
+            if (message.Type == MessageType.Text && message.Text.StartsWith('/'))
             {
                 // is a command
                 switch (message.Text.Split(' ').First())
