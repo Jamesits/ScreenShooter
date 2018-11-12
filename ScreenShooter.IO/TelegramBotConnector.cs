@@ -215,8 +215,20 @@ namespace ScreenShooter.IO
                 }
                 else
                 {
+                    // try if we can extract URLs from eneities
+                    foreach (var e in message.Entities)
+                    {
+                        switch (e.Type)
+                        {
+                            case MessageEntityType.Url:
+                                Logger.Debug($"Entity type URL: {e.Url}");
+                                break;
+                            case MessageEntityType.TextLink:
+                                Logger.Debug($"Entity type TextURL: {e.Url}");
+                                break;
+                        }
+                    }
                     // if is not valid URL
-                    // try to extract URLs from it 
                     await _bot.SendTextMessageAsync(
                         message.Chat, 
                         "Sorry, this is not a valid URL",
