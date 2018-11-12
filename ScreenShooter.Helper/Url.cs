@@ -64,9 +64,6 @@ namespace ScreenShooter.Helper
             s = s.Trim();
             if (s.Length == 0) return new string[0];
 
-            // check if is a single URL
-            if (IsValidUrl(s)) return new[] {s};
-
             var segments = s.Split();
             switch (segments.Length)
             {
@@ -74,6 +71,9 @@ namespace ScreenShooter.Helper
                     return new string[0];
                 case 1:
                 {
+                    // check if is a single URL
+                    if (IsValidUrl(s)) return new[] { s };
+
                     // try if it can be extended to be a valid URL
                     var orig = segments[0];
                     var urlseg = orig.Split(new []{ '/' }, 2);
