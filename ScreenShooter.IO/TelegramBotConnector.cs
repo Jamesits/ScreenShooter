@@ -132,122 +132,135 @@ namespace ScreenShooter.IO
             }
 
             Logger.Debug($"Received message from @{message.From.Username}: {message.Text}");
-            
-            if (message.Type == MessageType.Text && message.Text.StartsWith('/'))
+
+            try
             {
-                // is a command
-                switch (message.Text.Split(' ').First())
+                if (message.Type == MessageType.Text && message.Text.StartsWith('/'))
                 {
-                    case "/start":
-                    case "/help":
-                        await _bot.SendTextMessageAsync(message.Chat, 
-                            $"Welcome!\nDrop a URL, get a PNG + PDF.\nDemo development bot, service not guaranteed.\nSet up yours at https://github.com/Jamesits/ScreenShooter \n\n{Globals.ProgramIdentifier}",
-                            replyToMessageId: message.MessageId);
-                        break;
-                    case "/UserInfo":
-                        if (!Administrators.Contains(message.Chat.Id)) goto default;
-                        await _bot.SendTextMessageAsync(message.Chat, $"User ID: {message.Chat.Id}", replyToMessageId: message.MessageId);
-                        break;
-                    case "/DiagnosticInfo":
-                        if (!Administrators.Contains(message.Chat.Id)) goto default;
-                        await _bot.SendTextMessageAsync(message.Chat, RuntimeInformation.ToString(), replyToMessageId: message.MessageId);
-                        break;
-                    case "/ForceGarbageCollection":
-                        if (!Administrators.Contains(message.Chat.Id)) goto default;
-                        var sb = new StringBuilder();
-                        sb.AppendLine($"Before GC: {RuntimeInformation.WorkingSet}Bytes");
-                        GC.Collect(2, GCCollectionMode.Optimized, true, true);
-                        sb.AppendLine($"After GC: {RuntimeInformation.WorkingSet}Bytes");
-                        await _bot.SendTextMessageAsync(message.Chat, sb.ToString(), replyToMessageId: message.MessageId);
-                        break;
-                    default:
-                        await _bot.SendTextMessageAsync(message.Chat, "Unknown command. \n\n/help - get help",
-                            replyToMessageId: message.MessageId);
-                        break;
-                }
-            }
-            else
-            {
-                // get text from message
-                // TODO: parse message entities too
-                var content = "";
-                switch (message.Type)
-                {
-                    case MessageType.Text:
-                        content = message.Text;
-                        break;
-                    case MessageType.Photo:
-                    case MessageType.Video:
-                    case MessageType.Audio:
-                    case MessageType.Document:
-                        content = message.Caption;
-                        break;
-                    default:
-                        content = null;
-                        break;
-                }
-
-                if (content == null)
-                {
-                    Logger.Debug($"Received unknown message from @{message.From.Username} type {message.Type}");
-                        await _bot.SendTextMessageAsync(message.Chat, "Unacceptable content",
-                            replyToMessageId: message.MessageId);
-                        return;
-                }
-
-                // check if there is any valid url
-
-                var result = Url.ExtractValidUrls(content).ToList();
-
-                // also try if we can extract URLs from entities
-                foreach (var e in message.Entities)
-                {
-                    switch (e.Type)
+                    // is a command
+                    switch (message.Text.Split(' ').First())
                     {
-                        case MessageEntityType.Url:
-                            Logger.Debug($"Entity type URL: {e.Url}");
-                            if (Url.IsValidUrl(e.Url)) result.Add(e.Url.Trim());
+                        case "/start":
+                        case "/help":
+                            await _bot.SendTextMessageAsync(message.Chat,
+                                $"Welcome!\nDrop a URL, get a PNG + PDF.\nDemo development bot, service not guaranteed.\nSet up yours at https://github.com/Jamesits/ScreenShooter \n\n{Globals.ProgramIdentifier}",
+                                replyToMessageId: message.MessageId);
                             break;
-                        case MessageEntityType.TextLink:
-                            // This is equal to <a> tag in HTML
-                            Logger.Debug($"Entity type TextURL: {e.Url}");
-                            if (Url.IsValidUrl(e.Url)) result.Add(e.Url.Trim());
+                        case "/UserInfo":
+                            if (!Administrators.Contains(message.Chat.Id)) goto default;
+                            await _bot.SendTextMessageAsync(message.Chat, $"User ID: {message.Chat.Id}",
+                                replyToMessageId: message.MessageId);
+                            break;
+                        case "/DiagnosticInfo":
+                            if (!Administrators.Contains(message.Chat.Id)) goto default;
+                            await _bot.SendTextMessageAsync(message.Chat, RuntimeInformation.ToString(),
+                                replyToMessageId: message.MessageId);
+                            break;
+                        case "/ForceGarbageCollection":
+                            if (!Administrators.Contains(message.Chat.Id)) goto default;
+                            var sb = new StringBuilder();
+                            sb.AppendLine($"Before GC: {RuntimeInformation.WorkingSet}Bytes");
+                            GC.Collect(2, GCCollectionMode.Optimized, true, true);
+                            sb.AppendLine($"After GC: {RuntimeInformation.WorkingSet}Bytes");
+                            await _bot.SendTextMessageAsync(message.Chat, sb.ToString(),
+                                replyToMessageId: message.MessageId);
+                            break;
+                        default:
+                            await _bot.SendTextMessageAsync(message.Chat, "Unknown command. \n\n/help - get help",
+                                replyToMessageId: message.MessageId);
                             break;
                     }
                 }
-
-                // remove duplication
-                result = result.Distinct().ToList();
-
-                // TODO: if returned multiple URLs?
-
-                if (result.Count > 0)
-                {
-                    // is a valid URL
-                    await _bot.SendTextMessageAsync(message.Chat, $"Job enqueued. Sit back and relax - this is going to take minutes. \nRunning: {RuntimeInformation.OnGoingRequests}\nWaiting: {RuntimeInformation.QueuedRequests}\nMax parallel jobs: {Globals.GlobalConfig.ParallelJobs}",
-                        replyToMessageId: message.MessageId);
-                    NewRequest?.Invoke(this, new UserRequestEventArgs
-                    {
-                        Url = result[0], 
-                        RequestContext = message,
-                        RequestTypes = new List<UserRequestType>{UserRequestType.Pdf, UserRequestType.Png},
-                        IsPriority = Administrators.Contains(message.Chat.Id)
-                    });
-
-                }
                 else
                 {
-                    
-                    // if is not valid URL
-                    await _bot.SendTextMessageAsync(
-                        message.Chat, 
-                        "Sorry, this is not a valid URL",
-                        replyToMessageId: message.MessageId
+                    // get text from message
+                    // TODO: parse message entities too
+                    var content = "";
+                    switch (message.Type)
+                    {
+                        case MessageType.Text:
+                            content = message.Text;
+                            break;
+                        case MessageType.Photo:
+                        case MessageType.Video:
+                        case MessageType.Audio:
+                        case MessageType.Document:
+                            content = message.Caption;
+                            break;
+                        default:
+                            content = null;
+                            break;
+                    }
+
+                    if (content == null)
+                    {
+                        Logger.Debug($"Received unknown message from @{message.From.Username} type {message.Type}");
+                        await _bot.SendTextMessageAsync(message.Chat, "Unacceptable content",
+                            replyToMessageId: message.MessageId);
+                        return;
+                    }
+
+                    // check if there is any valid url
+
+                    var result = Url.ExtractValidUrls(content).ToList();
+
+                    // also try if we can extract URLs from entities
+                    if (message.Entities != null)
+                        foreach (var e in message.Entities)
+                        {
+                            switch (e.Type)
+                            {
+                                case MessageEntityType.Url:
+                                    Logger.Debug($"Entity type URL: {e.Url}");
+                                    if (Url.IsValidUrl(e.Url)) result.Add(e.Url.Trim());
+                                    break;
+                                case MessageEntityType.TextLink:
+                                    // This is equal to <a> tag in HTML
+                                    Logger.Debug($"Entity type TextURL: {e.Url}");
+                                    if (Url.IsValidUrl(e.Url)) result.Add(e.Url.Trim());
+                                    break;
+                            }
+                        }
+
+                    // remove duplication
+                    result = result.Distinct().ToList();
+
+                    // TODO: if returned multiple URLs?
+
+                    if (result.Count > 0)
+                    {
+                        // is a valid URL
+                        await _bot.SendTextMessageAsync(message.Chat,
+                            $"Job enqueued. Sit back and relax - this is going to take minutes. \nRunning: {RuntimeInformation.OnGoingRequests}\nWaiting: {RuntimeInformation.QueuedRequests}\nMax parallel jobs: {Globals.GlobalConfig.ParallelJobs}",
+                            replyToMessageId: message.MessageId);
+                        NewRequest?.Invoke(this, new UserRequestEventArgs
+                        {
+                            Url = result[0],
+                            RequestContext = message,
+                            RequestTypes = new List<UserRequestType> {UserRequestType.Pdf, UserRequestType.Png},
+                            IsPriority = Administrators.Contains(message.Chat.Id)
+                        });
+
+                    }
+                    else
+                    {
+
+                        // if is not valid URL
+                        await _bot.SendTextMessageAsync(
+                            message.Chat,
+                            "Sorry, this is not a valid URL",
+                            replyToMessageId: message.MessageId
                         );
+                    }
+
                 }
-
             }
-
+            catch (Exception e)
+            {
+                // if we do not process error, the error will be persist when bot restarts.
+                // so we end up here.
+                Logger.Error($"Something happened. Exception:\n{e}");
+            }
             
         }
 
