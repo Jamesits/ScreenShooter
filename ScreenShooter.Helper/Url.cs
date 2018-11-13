@@ -56,6 +56,7 @@ namespace ScreenShooter.Helper
                           )
                           && uriResult.IsLoopback == false
                           && Tlds.Any(x => uriResult.IdnHost.EndsWith(x))
+                          // TODO: valid IP address as host?
             ;
         }
 

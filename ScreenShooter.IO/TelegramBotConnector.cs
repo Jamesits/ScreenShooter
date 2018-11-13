@@ -174,7 +174,6 @@ namespace ScreenShooter.IO
                 else
                 {
                     // get text from message
-                    // TODO: parse message entities too
                     var content = "";
                     switch (message.Type)
                     {
