@@ -31,7 +31,7 @@ Messenging Connector:
 * dotnet core 2.1
 * Manually install [all dependencies of a chromium](https://github.com/Jamesits/ScreenShooter/wiki/Deploy-Example#chrome-runtime)
 
-On machine with <4GiB memory, please set `LowMemoryMode=true`, a smaller `ParallelJobs` and use a >2GiB swap.
+On machine with <4GiB memory, please set a smaller `ParallelJobs` and use a >2GiB swap.
 
 ### Deployment
 
@@ -43,10 +43,7 @@ Config file example:
 
 ```toml
 [GlobalConfig]
-# GC before processing every request
-AggressiveGc=true
-# Pre-allocate n*2 bytes for other programs (Chromium!) running on the same machine
-LowMemoryAddMemoryPressure=0
+# max parallel jobs
 ParallelJobs=1
 # do not retain saved file on the server
 RemoveLocalFile=true
