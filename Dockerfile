@@ -1,5 +1,6 @@
 FROM debian:stretch
 ARG BUILD_OUTPUT_DIR
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 
 RUN apt-get update && \
     apt-get upgrade -y && \
