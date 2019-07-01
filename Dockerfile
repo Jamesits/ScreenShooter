@@ -1,4 +1,5 @@
 FROM debian:stretch
+ARG BUILD_OUTPUT_DIR
 
 RUN apt-get update && \
     apt-get upgrade -y && \
