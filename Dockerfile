@@ -1,4 +1,4 @@
-FROM debian:buster
+FROM debian:stretch
 
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -6,8 +6,11 @@ RUN apt-get update && \
 
 RUN wget -O- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | apt-key add - && \
     wget https://packages.microsoft.com/config/debian/9/prod.list -O /etc/apt/sources.list.d/microsoft-prod.list && \
+    echo "deb http://ftp.us.debian.org/debian testing main contrib non-free" > /etc/apt/sources.list.d/debian-testing.list && \
+    echo -e "Package: *\nPin: release a=testing\nPin-Priority: -1" > /etc/apt/preferences.d/debian-testing && \
     apt-get update && \
-    apt-get install -y xorg libnss3 libxss1 libasound2 fonts-noto unzip dotnet-sdk-2.1 && \
+    apt-get install -y xorg libnss3 libxss1 libasound2 unzip dotnet-sdk-2.1 && \
+    apt-get -y -t testing install fonts-noto libfreetype6 fontconfig libcairo-gobject2 libcairo2 && \
     rm -r /var/lib/apt/lists/*
 
 COPY entrypoint.sh /usr/local/bin/
