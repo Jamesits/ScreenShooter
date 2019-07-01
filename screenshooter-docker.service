@@ -1,0 +1,14 @@
+[Unit]
+Description=Screenshooter
+Requires=docker.service
+After=network-online.target
+Conflicts=screenshooter.service
+
+[Service]
+ExecStart=/usr/bin/docker run --name=screenshooter --rm --volume /etc/screenshooter:/etc/screenshooter jamesits/screenshooter:latest
+ExecStop=/usr/bin/docker stop screenshooter
+ExecReload=/usr/bin/docker restart screenshooter
+TimeoutStartSec=infinity
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,16 @@
+[Unit]
+Description=ScreenShooter
+After=network-online.target
+Conflicts=screenshooter-docker.service
+
+[Service]
+ExecStart=/usr/bin/dotnet /opt/ScreenShooter/ScreenShooter.dll --config /etc/ScreenShooter/config.toml
+Environment=DOTNET_CLI_HOME=/tmp
+User=nobody
+WorkingDirectory=/var/ScreenShooter
+TimeoutStopSec=5min
+RestartSec=15
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
