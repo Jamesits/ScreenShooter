@@ -1,4 +1,4 @@
-FROM debian:10
+FROM debian:buster
 
 RUN apt-get update && \
     apt-get upgrade -y && \
