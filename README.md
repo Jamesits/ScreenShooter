@@ -8,6 +8,8 @@ An automatic web page screenshot service.
 ## CI and Demo
 
 [![Build Status](https://dev.azure.com/nekomimiswitch/General/_apis/build/status/ScreenShooter)](https://dev.azure.com/nekomimiswitch/General/_build/latest?definitionId=26)
+[![](https://images.microbadger.com/badges/version/jamesits/screenshooter.svg)](https://microbadger.com/images/jamesits/screenshooter "Get your own version badge on microbadger.com")
+[![](https://images.microbadger.com/badges/image/jamesits/screenshooter.svg)](https://microbadger.com/images/jamesits/screenshooter "Get your own image badge on microbadger.com")
 
 Demo services are not guaranteed to work - they run the latest code from the master branch. Feel free to play with them, but don't take up too much resources.
 
