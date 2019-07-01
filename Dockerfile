@@ -1,5 +1,5 @@
 FROM debian:stretch
-ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
     apt-get upgrade -y && \
