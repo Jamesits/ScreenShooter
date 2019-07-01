@@ -19,8 +19,8 @@ trigger:
     ]
 
 jobs:
-  - job: image
-    displayName: "build image"
+  - job: build
+    displayName: "build"
     pool:
       vmImage: "ubuntu-16.04"
     workspace:
