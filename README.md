@@ -15,6 +15,8 @@ Demo services are not guaranteed to work - they run the latest code from the mas
 
 * Telegram bot demo: [@ScreenShooterDemoBot](https://t.me/ScreenShooterDemoBot)
 
+[The pre-built Docker image](https://hub.docker.com/r/jamesits/screenshooter) is very large as it contains noto fonts.
+
 ## Features
 
 Currently supported:
