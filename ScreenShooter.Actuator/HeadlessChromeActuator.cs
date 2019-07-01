@@ -41,7 +41,8 @@ namespace ScreenShooter.Actuator
         private readonly LaunchOptions _defaultBrowserLaunchOptions = new LaunchOptions
         {
             Headless = true,
-            DumpIO = true
+            DumpIO = true,
+            Args = new[] { "--no-sandbox" },
         };
 
         public HeadlessChromeActuator() : this(true)
