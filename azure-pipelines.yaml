@@ -1,4 +1,4 @@
-name: $(BUILD_SCRIPT_BRANCH)-$(Date:yyyyMMdd).$(Rev:r)
+name: $(Build.SourceBranchName)-$(Date:yyyyMMdd).$(Rev:r)
 variables:
   Parameters.RestoreBuildProjects: "**/*.csproj"
   Parameters.TestProjects: "**/*[Tt]ests/*.csproj"
