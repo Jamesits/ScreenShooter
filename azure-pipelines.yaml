@@ -1,5 +1,10 @@
 name: $(BUILD_SCRIPT_BRANCH)-$(Date:yyyyMMdd).$(Rev:r)
-
+variables:
+  Parameters.RestoreBuildProjects: "**/*.csproj"
+  Parameters.TestProjects: "**/*[Tt]ests/*.csproj"
+  BuildConfiguration: "Release"
+  BuildPlatform: "any cpu"
+  
 trigger:
   batch: true
   branches:
