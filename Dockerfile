@@ -7,13 +7,15 @@ RUN apt-get update && \
 RUN wget -O- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | apt-key add - && \
     wget https://packages.microsoft.com/config/debian/9/prod.list -O /etc/apt/sources.list.d/microsoft-prod.list && \
     apt-get update && \
-    apt-get install -y xorg libnss3 libxss1 libasound2 fonts-wqy-zenhei fonts-emojione dotnet-sdk-2.1 && \
+    apt-get install -y xorg libnss3 libxss1 libasound2 fonts-wqy-zenhei fonts-emojione unzip dotnet-sdk-2.1 && \
     rm -r /var/lib/apt/lists/*
 
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/*
 
-COPY ${BUILD_OUTPUT_DIR} /opt/screenshooter/
+COPY ${BUILD_OUTPUT_DIR}/ScreenShooter.zip /opt/screenshooter/
+RUN unzip /opt/screenshooter/ScreenShooter.zip && \
+    rm /opt/screenshooter/ScreenShooter.zip
 
 WORKDIR /var/screenshooter
 ENTRYPOINT [ "entrypoint.sh" ]
