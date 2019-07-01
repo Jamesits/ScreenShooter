@@ -18,10 +18,11 @@ RUN wget -O- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor |
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/*
 
+WORKDIR /opt/ScreenShooter
 ARG BUILD_OUTPUT_DIR
-COPY $BUILD_OUTPUT_DIR/ScreenShooter.zip /opt/screenshooter/
-RUN unzip /opt/screenshooter/ScreenShooter.zip && \
-    rm /opt/screenshooter/ScreenShooter.zip
+COPY $BUILD_OUTPUT_DIR/ScreenShooter.zip .
+RUN unzip ScreenShooter.zip && \
+    rm ScreenShooter.zip
 
 WORKDIR /var/screenshooter
 ENTRYPOINT [ "entrypoint.sh" ]
