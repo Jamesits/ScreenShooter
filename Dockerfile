@@ -11,6 +11,8 @@ RUN wget -O- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor |
     # IDK what happened to the echo utility but if I call echo directly it echos "-e" too
     /bin/echo -e "Package: *\nPin: release a=testing\nPin-Priority: -1" > /etc/apt/preferences.d/debian-testing && \
     apt-get update && \
+    # hard-coded chromium dependencies - https://github.com/GoogleChrome/puppeteer/issues/3698#issuecomment-506311305
+    apt-get install -y gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils && \
     # there is no good way to only install chromium's dependencies; let's install it to get the correct dependency
     apt-get install -y unzip dotnet-sdk-2.1 chromium && \
     apt-get -y -t testing install fonts-noto libfreetype6 fontconfig libcairo-gobject2 libcairo2 && \
