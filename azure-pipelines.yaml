@@ -61,13 +61,21 @@ jobs:
         PathtoPublish: '$(build.artifactstagingdirectory)'
         ArtifactName: ScreenShooter
 
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(build.artifactstagingdirectory)/ScreenShooter'
+        contents: '**' 
+        targetFolder: 'publish'
+        cleanTargetFolder: true
+        overWrite: true
+
     - task: Docker@1
       displayName: 'Build image'
       inputs:
         containerregistrytype: 'Container Registry'
         dockerRegistryEndpoint: 'Docker Hub: Jamesits'
         imageName: 'jamesits/screenshooter'
-        arguments: '--build-arg BUILD_OUTPUT_DIR=$(build.artifactstagingdirectory)'
+        arguments: '--build-arg BUILD_OUTPUT_DIR=publish'
         includeSourceTags: true
         includeLatestTag: true
 
