@@ -11,7 +11,8 @@ RUN wget -O- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor |
     # IDK what happened to the echo utility but if I call echo directly it echos "-e" too
     /bin/echo -e "Package: *\nPin: release a=testing\nPin-Priority: -1" > /etc/apt/preferences.d/debian-testing && \
     apt-get update && \
-    apt-get install -y xorg libnss3 libxss1 libasound2 unzip dotnet-sdk-2.1 && \
+    # there is no good way to only install chromium's dependencies; let's install it to get the correct dependency
+    apt-get install -y unzip dotnet-sdk-2.1 chromium && \
     apt-get -y -t testing install fonts-noto libfreetype6 fontconfig libcairo-gobject2 libcairo2 && \
     rm -r /var/lib/apt/lists/*
 
