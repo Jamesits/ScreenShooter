@@ -70,20 +70,28 @@ jobs:
         overWrite: true
 
     - task: Docker@1
-      displayName: 'Build image'
+      displayName: 'Build slim image'
       inputs:
+        command: buildAndPush
         containerregistrytype: 'Container Registry'
         dockerRegistryEndpoint: 'Docker Hub: Jamesits'
+        Dockerfile: "/Dockerfile.slim"
         imageName: 'jamesits/screenshooter'
+        tags: |
+          slim
         arguments: '--build-arg BUILD_OUTPUT_DIR=publish'
-        includeSourceTags: true
-        includeLatestTag: true
 
     - task: Docker@1
-      displayName: 'Push image'
+      displayName: 'Build full image'
       inputs:
+        command: buildAndPush
         containerregistrytype: 'Container Registry'
         dockerRegistryEndpoint: 'Docker Hub: Jamesits'
-        command: 'Push an image'
+        Dockerfile: "/Dockerfile"
         imageName: 'jamesits/screenshooter'
+        arguments: '--build-arg BUILD_OUTPUT_DIR=publish'
+        tags: |
+          full
+        includeSourceTags: true
+        includeLatestTag: true
 

@@ -1,0 +1,25 @@
+FROM debian:stretch
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y apt-transport-https gnupg wget
+
+RUN wget -O- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | apt-key add - && \
+    wget https://packages.microsoft.com/config/debian/9/prod.list -O /etc/apt/sources.list.d/microsoft-prod.list && \
+    apt-get update && \
+    apt-get install -y unzip dotnet-sdk-2.1 && \
+    rm -r /var/lib/apt/lists/*
+
+COPY entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/*
+
+WORKDIR /opt/ScreenShooter
+ARG BUILD_OUTPUT_DIR
+COPY $BUILD_OUTPUT_DIR/ScreenShooter.zip .
+RUN unzip ScreenShooter.zip && \
+    rm ScreenShooter.zip
+
+WORKDIR /var/screenshooter
+ENTRYPOINT [ "entrypoint.sh" ]
+CMD [ "/usr/bin/dotnet", "/opt/ScreenShooter/ScreenShooter.dll", "--config", "/etc/ScreenShooter/config.toml" ]
