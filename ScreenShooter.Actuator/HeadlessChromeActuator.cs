@@ -35,7 +35,6 @@ namespace ScreenShooter.Actuator
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private Browser _browser;
 
-        public bool RequireNewBrowserInstancePerSession { get; set; } = true;
         private bool _requireNewBrowserInstance;
 
         private readonly LaunchOptions _defaultBrowserLaunchOptions = new LaunchOptions
@@ -62,10 +61,10 @@ namespace ScreenShooter.Actuator
         public int ExtraDownloadWaitDelay { get; set; } = 10000;
         public int MaxTitlePrependLength { get; set; } = 32;
 
-        private async Task NewBrowser()
+        public virtual async Task<Browser> NewBrowser()
         {
             Logger.Debug("Launch browser");
-            _browser = await Puppeteer.LaunchAsync(_defaultBrowserLaunchOptions);
+            return await Puppeteer.LaunchAsync(_defaultBrowserLaunchOptions);
         }
 
         public async Task<CaptureResponseEventArgs> CapturePage(object sender, UserRequestEventArgs e)
@@ -80,21 +79,7 @@ namespace ScreenShooter.Actuator
                 HasPotentialUnfinishedDownloads = true
             };
 
-            // create a new browser if needed
-            var currentSessionBrowser = _browser;
-
-            if (RequireNewBrowserInstancePerSession)
-            {
-                currentSessionBrowser = await Puppeteer.LaunchAsync(_defaultBrowserLaunchOptions);
-            }
-            else
-            {
-                if (_browser == null || _browser.IsClosed || _requireNewBrowserInstance)
-                {
-                    await NewBrowser();
-                    currentSessionBrowser = _browser;
-                }
-            }
+            var currentSessionBrowser = await NewBrowser();
 
             // create a new session
             Logger.Debug("Create incognito session");
@@ -233,11 +218,9 @@ namespace ScreenShooter.Actuator
                 await page.CloseAsync();
                 Logger.Debug("Kill context");
                 await context.CloseAsync();
-                if (RequireNewBrowserInstancePerSession)
-                {
-                    Logger.Debug("Closing browser");
-                    await currentSessionBrowser.CloseAsync();
-                }
+
+                Logger.Debug("Closing browser");
+                await currentSessionBrowser.CloseAsync();
             }
             catch (Exception ex)
             {
